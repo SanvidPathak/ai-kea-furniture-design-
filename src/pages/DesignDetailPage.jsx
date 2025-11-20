@@ -97,11 +97,11 @@ export function DesignDetailPage() {
     <div className="min-h-screen bg-earth-beige">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-neutral-200">
-        <div className="section-container py-4 flex items-center justify-between">
+        <div className="section-container py-4 flex items-center justify-between gap-4">
           <Link to="/">
-            <h1 className="text-3xl font-bold text-ikea-blue">AI-KEA</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-ikea-blue whitespace-nowrap">AI-KEA</h1>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/designs">
               <Button variant="secondary">My Designs</Button>
             </Link>

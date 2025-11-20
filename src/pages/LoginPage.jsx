@@ -25,7 +25,7 @@ export function LoginPage() {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <Link to="/">
-            <h1 className="text-4xl font-bold text-ikea-blue mb-2">AI-KEA</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-ikea-blue mb-2 whitespace-nowrap">AI-KEA</h1>
           </Link>
           <p className="text-neutral-600">Sign in to your account</p>
         </div>

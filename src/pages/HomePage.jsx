@@ -18,25 +18,25 @@ export function HomePage() {
     <div className="min-h-screen bg-earth-beige">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-neutral-200">
-        <div className="section-container py-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-ikea-blue">AI-KEA</h1>
-          <div className="flex items-center gap-4">
+        <div className="section-container py-3 sm:py-4 flex items-center justify-between">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-ikea-blue whitespace-nowrap">AI-KEA</h1>
+          <div className="flex items-center gap-2 sm:gap-4">
             {isAuthenticated ? (
               <>
-                <span className="text-sm text-neutral-600">
+                <span className="hidden sm:inline text-sm text-neutral-600">
                   Welcome, <span className="font-semibold">{user?.displayName || 'User'}</span>
                 </span>
-                <Button variant="secondary" onClick={handleSignOut}>
+                <Button variant="secondary" onClick={handleSignOut} className="text-xs sm:text-sm">
                   Sign Out
                 </Button>
               </>
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="secondary">Sign In</Button>
+                  <Button variant="secondary" className="text-xs sm:text-sm">Sign In</Button>
                 </Link>
-                <Link to="/signup">
-                  <Button>Get Started</Button>
+                <Link to="/signup" className="hidden sm:inline">
+                  <Button className="text-xs sm:text-sm">Get Started</Button>
                 </Link>
               </>
             )}
@@ -45,37 +45,37 @@ export function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="section-container">
+      <section className="section-container px-4">
         <div className="max-w-4xl mx-auto text-center animate-fade-in">
-          <h2 className="text-5xl md:text-6xl font-bold text-neutral-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 mb-4">
             Design Your Perfect Furniture
           </h2>
-          <p className="text-xl md:text-2xl text-neutral-600 mb-8">
+          <p className="text-lg sm:text-xl md:text-2xl text-neutral-600 mb-6 sm:mb-8">
             AI-powered modular furniture design platform
           </p>
-          <p className="text-lg text-neutral-500 mb-12 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg text-neutral-500 mb-8 sm:mb-12 max-w-2xl mx-auto">
             Simply describe what you need in plain English, or use our guided design tool.
             Get instant cost estimates, assembly instructions, and 3D previews.
           </p>
 
           {/* CTA Buttons */}
           {isAuthenticated ? (
-            <div className="flex gap-4 justify-center mb-16">
-              <Link to="/create">
-                <Button className="text-lg px-8 py-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16">
+              <Link to="/create" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4">
                   Start Designing →
                 </Button>
               </Link>
-              <Link to="/designs">
-                <Button variant="secondary" className="text-lg px-8 py-4">
+              <Link to="/designs" className="w-full sm:w-auto">
+                <Button variant="secondary" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4">
                   My Designs
                 </Button>
               </Link>
             </div>
           ) : (
-            <div className="flex gap-4 justify-center mb-16">
-              <Link to="/signup">
-                <Button className="text-lg px-8 py-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16">
+              <Link to="/signup" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4">
                   Get Started Free
                 </Button>
               </Link>

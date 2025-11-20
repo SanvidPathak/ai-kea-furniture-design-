@@ -54,12 +54,12 @@ export function DesignPreview({ design }) {
 
       {/* Design Header */}
       <div className="card">
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
           <div>
-            <h2 className="text-3xl font-bold text-neutral-900 capitalize mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 capitalize mb-2">
               {design.furnitureType}
             </h2>
-            <div className="flex items-center gap-4 text-sm text-neutral-600">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-neutral-600">
               <span className="flex items-center gap-1 capitalize">
                 <span className="font-medium">Material:</span> {design.material}
               </span>
@@ -72,8 +72,8 @@ export function DesignPreview({ design }) {
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-ikea-blue">
+          <div className="text-left sm:text-right">
+            <div className="text-2xl sm:text-3xl font-bold text-ikea-blue">
               ${design.totalCost.toFixed(2)}
             </div>
             <div className="text-xs text-neutral-500">Total Cost</div>
@@ -81,24 +81,24 @@ export function DesignPreview({ design }) {
         </div>
 
         {/* Dimensions */}
-        <div className="grid grid-cols-3 gap-4 p-4 bg-earth-beige rounded-lg">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 bg-earth-beige rounded-lg">
           <div className="text-center">
-            <div className="text-2xl font-bold text-neutral-900">
-              {design.dimensions.length} cm
+            <div className="text-lg sm:text-2xl font-bold text-neutral-900">
+              {design.dimensions.length}
             </div>
-            <div className="text-xs text-neutral-600">Length</div>
+            <div className="text-[10px] sm:text-xs text-neutral-600">Length (cm)</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-neutral-900">
-              {design.dimensions.width} cm
+            <div className="text-lg sm:text-2xl font-bold text-neutral-900">
+              {design.dimensions.width}
             </div>
-            <div className="text-xs text-neutral-600">Width</div>
+            <div className="text-[10px] sm:text-xs text-neutral-600">Width (cm)</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-neutral-900">
-              {design.dimensions.height} cm
+            <div className="text-lg sm:text-2xl font-bold text-neutral-900">
+              {design.dimensions.height}
             </div>
-            <div className="text-xs text-neutral-600">Height</div>
+            <div className="text-[10px] sm:text-xs text-neutral-600">Height (cm)</div>
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export function DesignPreview({ design }) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <Button
           onClick={handleSave}
           loading={saving}

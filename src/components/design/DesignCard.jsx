@@ -25,17 +25,17 @@ export function DesignCard({ design, onDelete }) {
     <Link to={`/designs/${design.id}`}>
       <div className="card hover:shadow-soft transition-all duration-200 cursor-pointer group">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
           <div className="flex-1">
-            <h3 className="text-xl font-semibold text-neutral-900 capitalize group-hover:text-ikea-blue transition-colors">
+            <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 capitalize group-hover:text-ikea-blue transition-colors">
               {design.furnitureType}
             </h3>
-            <p className="text-sm text-neutral-500 mt-1">
+            <p className="text-xs sm:text-sm text-neutral-500 mt-1">
               Created {formatDate(design.createdAt)}
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-ikea-blue">
+          <div className="text-left sm:text-right">
+            <div className="text-xl sm:text-2xl font-bold text-ikea-blue">
               ${design.totalCost?.toFixed(2) || '0.00'}
             </div>
           </div>
@@ -43,7 +43,7 @@ export function DesignCard({ design, onDelete }) {
 
         {/* Design Info */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-neutral-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600">
             <span className="font-medium">Material:</span>
             <div className="flex items-center gap-1 capitalize">
               <div
@@ -53,13 +53,13 @@ export function DesignCard({ design, onDelete }) {
               {design.material}
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-neutral-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600">
             <span className="font-medium">Dimensions:</span>
-            <span className="font-mono">
+            <span className="font-mono text-xs sm:text-sm">
               {design.dimensions?.length} × {design.dimensions?.width} × {design.dimensions?.height} cm
             </span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-neutral-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600">
             <span className="font-medium">Parts:</span>
             <span>{design.parts?.length || 0} types</span>
           </div>
@@ -73,20 +73,20 @@ export function DesignCard({ design, onDelete }) {
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-4 border-t border-neutral-200">
+        <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-neutral-200">
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               navigate(`/designs/${design.id}`);
             }}
-            className="flex-1 px-4 py-2 text-sm font-medium text-ikea-blue hover:bg-primary-50 rounded transition-colors"
+            className="flex-1 px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-ikea-blue hover:bg-primary-50 rounded transition-colors"
           >
             View Details
           </button>
           <button
             onClick={handleDelete}
-            className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
+            className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
           >
             Delete
           </button>
