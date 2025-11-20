@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function DesignCard({ design, onDelete }) {
+  const navigate = useNavigate();
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Unknown date';
     const date = new Date(timestamp);
@@ -77,7 +78,7 @@ export function DesignCard({ design, onDelete }) {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // Navigate to edit will be handled by parent
+              navigate(`/designs/${design.id}`);
             }}
             className="flex-1 px-4 py-2 text-sm font-medium text-ikea-blue hover:bg-primary-50 rounded transition-colors"
           >

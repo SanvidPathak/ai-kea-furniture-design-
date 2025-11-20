@@ -11,6 +11,9 @@ test-frontend.js
 /dist
 /build
 
+# Firebase Hosting cache
+.firebase/
+
 # Environment variables
 .env
 .env.local

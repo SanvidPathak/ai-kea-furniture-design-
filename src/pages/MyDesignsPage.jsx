@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { useToast } from '../contexts/ToastContext.jsx';
 import { getUserDesigns, deleteDesign } from '../services/designService.js';
 import { signOut } from '../services/authService.js';
 import { DesignCard } from '../components/design/DesignCard.jsx';
@@ -10,6 +11,7 @@ import { ErrorMessage } from '../components/common/ErrorMessage.jsx';
 
 export function MyDesignsPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const [designs, setDesigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -42,9 +44,10 @@ export function MyDesignsPage() {
       await deleteDesign(designId, user.uid);
       // Remove from local state
       setDesigns(designs.filter(d => d.id !== designId));
+      showToast('Design deleted successfully!', 'success');
     } catch (error) {
       console.error('Delete design error:', error);
-      setErrorMessage('Failed to delete design. Please try again.');
+      showToast('Failed to delete design. Please try again.', 'error');
     }
   };
 
