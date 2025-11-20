@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+test-frontend.js
+
+# Production
+/dist
+/build
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Project documentation (exclude all project .md files except README.md)
+BUILD_FROM_SCRATCH.md
+TEST_REPORT.md
+IMPLEMENTATION_LOG.md
+CHANGELOG.md
+NOTES.md
+APPLY_SECURITY_RULES.md
+FIREBASE_SETUP_GUIDE.md
+GEMINI_INTEGRATION_COMPLETE.md
+docs/
+
+# Test and debug files
+test-backend.js
+test-gemini-connection.js
+test-simple-write.js
+debug-firebase.js
+
+# Claude files
+.claude/
