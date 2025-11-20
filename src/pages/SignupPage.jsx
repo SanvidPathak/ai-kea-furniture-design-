@@ -2,6 +2,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { SignupForm } from '../components/auth/SignupForm.jsx';
 import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
+import { Logo } from '../components/common/Logo.jsx';
 
 export function SignupPage() {
   const { isAuthenticated, loading } = useAuth();
@@ -24,8 +25,8 @@ export function SignupPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <Link to="/">
-            <h1 className="text-3xl sm:text-4xl font-bold text-ikea-blue mb-2 whitespace-nowrap">AI-KEA</h1>
+          <Link to="/" className="flex justify-center mb-4">
+            <Logo size="lg" />
           </Link>
           <p className="text-neutral-600">Create your account</p>
         </div>

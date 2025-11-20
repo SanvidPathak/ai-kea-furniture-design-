@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { DesignCreator } from '../components/design/DesignCreator.jsx';
 import { DesignPreview } from '../components/design/DesignPreview.jsx';
 import { Button } from '../components/common/Button.jsx';
+import { Logo } from '../components/common/Logo.jsx';
 
 export function CreateDesignPage() {
   const { user, isAuthenticated } = useAuth();
@@ -25,8 +26,8 @@ export function CreateDesignPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-neutral-200">
         <div className="section-container py-4 flex items-center justify-between gap-4">
-          <Link to="/">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-ikea-blue whitespace-nowrap">AI-KEA</h1>
+          <Link to="/" className="flex items-center">
+            <Logo />
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             {isAuthenticated ? (

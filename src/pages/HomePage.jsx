@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { signOut } from '../services/authService.js';
 import { Button } from '../components/common/Button.jsx';
+import { Logo } from '../components/common/Logo.jsx';
 
 export function HomePage() {
   const { user, isAuthenticated } = useAuth();
@@ -19,7 +20,9 @@ export function HomePage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-neutral-200">
         <div className="section-container py-3 sm:py-4 flex items-center justify-between">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-ikea-blue whitespace-nowrap">AI-KEA</h1>
+          <Link to="/" className="flex items-center">
+            <Logo />
+          </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             {isAuthenticated ? (
               <>

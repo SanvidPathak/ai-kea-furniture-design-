@@ -8,6 +8,7 @@ import { DesignCard } from '../components/design/DesignCard.jsx';
 import { Button } from '../components/common/Button.jsx';
 import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
 import { ErrorMessage } from '../components/common/ErrorMessage.jsx';
+import { Logo } from '../components/common/Logo.jsx';
 
 export function MyDesignsPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -69,8 +70,8 @@ export function MyDesignsPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-neutral-200">
         <div className="section-container py-4 flex items-center justify-between gap-4">
-          <Link to="/">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-ikea-blue whitespace-nowrap">AI-KEA</h1>
+          <Link to="/" className="flex items-center">
+            <Logo />
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/create">
