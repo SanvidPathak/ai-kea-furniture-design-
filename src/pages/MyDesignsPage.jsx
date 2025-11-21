@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { getUserDesigns, deleteDesign } from '../services/designService.js';
 import { signOut } from '../services/authService.js';
+import { calculateTotalCost } from '../services/designGenerator.js';
 import { DesignCard } from '../components/design/DesignCard.jsx';
 import { Button } from '../components/common/Button.jsx';
 import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
@@ -31,7 +32,20 @@ export function MyDesignsPage() {
 
     try {
       const userDesigns = await getUserDesigns(user.uid);
-      setDesigns(userDesigns);
+
+      // Recalculate prices for all designs with current rates
+      const designsWithUpdatedPrices = userDesigns.map(design => {
+        if (design.parts && design.material) {
+          const recalculatedCost = calculateTotalCost(design.parts, design.material);
+          return {
+            ...design,
+            totalCost: recalculatedCost
+          };
+        }
+        return design;
+      });
+
+      setDesigns(designsWithUpdatedPrices);
     } catch (error) {
       console.error('Load designs error:', error);
       setErrorMessage('Failed to load designs. Please try again.');
@@ -79,9 +93,12 @@ export function MyDesignsPage() {
             </Link>
             {user && (
               <>
-                <span className="text-sm text-neutral-600">
-                  {user.displayName}
-                </span>
+                <Link to="/account" className="hidden sm:flex items-center gap-2 text-sm text-neutral-600 hover:text-ikea-blue transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{user.displayName}</span>
+                </Link>
                 <Button variant="secondary" onClick={handleSignOut}>
                   Sign Out
                 </Button>
@@ -92,71 +109,86 @@ export function MyDesignsPage() {
       </header>
 
       {/* Main Content */}
-      <div className="section-container py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-4xl font-bold text-neutral-900 mb-2">
-            My Designs
-          </h2>
-          <p className="text-lg text-neutral-600">
-            View and manage your saved furniture designs
-          </p>
-        </div>
-
-        <ErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
-
-        {/* Loading State */}
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <LoadingSpinner size="xl" />
-          </div>
-        ) : designs.length === 0 ? (
-          /* Empty State */
-          <div className="card text-center py-16">
-            <div className="text-6xl mb-4">📐</div>
-            <h3 className="text-2xl font-semibold text-neutral-900 mb-2">
-              No Designs Yet
-            </h3>
-            <p className="text-neutral-600 mb-6 max-w-md mx-auto">
-              You haven't created any furniture designs yet. Start designing to see them here!
+      <main className="section-container py-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-2">
+              My Designs
+            </h1>
+            <p className="text-neutral-600">
+              View and manage your saved furniture designs
             </p>
-            <Link to="/create">
-              <Button className="text-lg px-8 py-4">
-                Create Your First Design
-              </Button>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex gap-4 mb-6 border-b border-neutral-200">
+            <div className="pb-3 px-1 text-ikea-blue border-b-2 border-ikea-blue font-semibold">
+              My Designs
+            </div>
+            <Link
+              to="/orders"
+              className="pb-3 px-1 text-neutral-600 hover:text-ikea-blue transition-colors"
+            >
+              My Orders
             </Link>
           </div>
-        ) : (
-          /* Designs Grid */
-          <>
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-neutral-600">
-                Showing {designs.length} design{designs.length !== 1 ? 's' : ''}
+
+          <ErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
+
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <LoadingSpinner size="xl" />
+            </div>
+          ) : designs.length === 0 ? (
+            /* Empty State */
+            <div className="card text-center py-16">
+              <div className="text-6xl mb-4">📐</div>
+              <h3 className="text-2xl font-semibold text-neutral-900 mb-2">
+                No Designs Yet
+              </h3>
+              <p className="text-neutral-600 mb-6 max-w-md mx-auto">
+                You haven't created any furniture designs yet. Start designing to see them here!
               </p>
               <Link to="/create">
-                <Button variant="secondary">+ New Design</Button>
+                <Button className="text-lg px-8 py-4">
+                  Create Your First Design
+                </Button>
               </Link>
             </div>
+          ) : (
+            /* Designs Grid */
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-neutral-600">
+                  Showing {designs.length} design{designs.length !== 1 ? 's' : ''}
+                </p>
+                <Link to="/create">
+                  <Button variant="secondary">+ New Design</Button>
+                </Link>
+              </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {designs.map((design) => (
-                <DesignCard
-                  key={design.id}
-                  design={design}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          </>
-        )}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {designs.map((design) => (
+                  <DesignCard
+                    key={design.id}
+                    design={design}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </>
+          )}
 
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Link to="/" className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors">
-            ← Back to home
-          </Link>
+          {/* Back to Home */}
+          <div className="mt-8 text-center">
+            <Link to="/" className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors">
+              ← Back to home
+            </Link>
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* Footer */}
       <footer className="bg-white border-t border-neutral-200 mt-16">

@@ -217,3 +217,21 @@ export async function deleteOrder(orderId, userId) {
     throw new Error(`Failed to delete order: ${error.message}`);
   }
 }
+
+/**
+ * Format order status for display
+ * @param {string} status - Order status
+ * @returns {Object} Display info with label and color
+ */
+export function getOrderStatusDisplay(status) {
+  const statusMap = {
+    processing: { label: 'Processing', color: 'text-yellow-600 bg-yellow-50' },
+    confirmed: { label: 'Confirmed', color: 'text-blue-600 bg-blue-50' },
+    manufacturing: { label: 'Manufacturing', color: 'text-purple-600 bg-purple-50' },
+    shipped: { label: 'Shipped', color: 'text-indigo-600 bg-indigo-50' },
+    delivered: { label: 'Delivered', color: 'text-green-600 bg-green-50' },
+    cancelled: { label: 'Cancelled', color: 'text-red-600 bg-red-50' },
+  };
+
+  return statusMap[status] || { label: status, color: 'text-neutral-600 bg-neutral-50' };
+}

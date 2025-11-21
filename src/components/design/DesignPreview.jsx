@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import { saveDesign } from '../../services/designService.js';
+import { saveOrder } from '../../services/orderService.js';
 import { DesignPartsTable } from './DesignPartsTable.jsx';
+import { CostBreakdown } from './CostBreakdown.jsx';
+import { OrderForm } from '../order/OrderForm.jsx';
 import { Button } from '../common/Button.jsx';
 import { ErrorMessage } from '../common/ErrorMessage.jsx';
 
@@ -12,7 +15,16 @@ export function DesignPreview({ design }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [savedDesignId, setSavedDesignId] = useState(design?.id || null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Update savedDesignId when design prop changes (e.g., when viewing saved design)
+  useEffect(() => {
+    if (design?.id) {
+      setSavedDesignId(design.id);
+    }
+  }, [design?.id]);
 
   if (!design) {
     return (
@@ -38,13 +50,57 @@ export function DesignPreview({ design }) {
     setErrorMessage('');
 
     try {
-      await saveDesign(user.uid, design);
+      const savedDesign = await saveDesign(user.uid, design);
+      setSavedDesignId(savedDesign.id);
       showToast('Design saved successfully! View it in My Designs.', 'success');
+      return savedDesign.id;
     } catch (error) {
       console.error('Save design error:', error);
       setErrorMessage('Failed to save design. Please try again.');
+      throw error;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCreateOrder = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      // Save design first if not already saved
+      let designId = savedDesignId;
+      if (!designId) {
+        designId = await handleSave();
+        if (!designId) {
+          setErrorMessage('Failed to save design. Please try again.');
+          return;
+        }
+      }
+
+      setShowOrderForm(true);
+    } catch (error) {
+      console.error('Error preparing order:', error);
+      setErrorMessage('Failed to prepare order. Please try again.');
+    }
+  };
+
+  const handleOrderSubmit = async (customerInfo) => {
+    try {
+      const orderData = {
+        designId: savedDesignId || 'temp',
+        designSnapshot: design,
+        customerInfo,
+      };
+
+      await saveOrder(user.uid, orderData);
+      showToast('Order placed successfully! Check My Orders for details.', 'success');
+      setShowOrderForm(false);
+    } catch (error) {
+      console.error('Order creation error:', error);
+      throw error;
     }
   };
 
@@ -74,7 +130,7 @@ export function DesignPreview({ design }) {
           </div>
           <div className="text-left sm:text-right">
             <div className="text-2xl sm:text-3xl font-bold text-ikea-blue">
-              ${design.totalCost.toFixed(2)}
+              ₹{design.totalCost.toFixed(2)}
             </div>
             <div className="text-xs text-neutral-500">Total Cost</div>
           </div>
@@ -119,6 +175,13 @@ export function DesignPreview({ design }) {
         <DesignPartsTable parts={design.parts} />
       </div>
 
+      {/* Cost Breakdown */}
+      <CostBreakdown
+        parts={design.parts}
+        material={design.material}
+        totalCost={design.totalCost}
+      />
+
       {/* Assembly Instructions */}
       <div className="card">
         <h3 className="text-xl font-semibold text-neutral-900 mb-4">
@@ -136,6 +199,22 @@ export function DesignPreview({ design }) {
         </ol>
       </div>
 
+      {/* Order Form Modal */}
+      {showOrderForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-2xl w-full my-4 sm:my-8 max-h-[95vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 mb-4">Place Your Order</h2>
+              <OrderForm
+                design={design}
+                onSubmit={handleOrderSubmit}
+                onCancel={() => setShowOrderForm(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <Button
@@ -145,8 +224,12 @@ export function DesignPreview({ design }) {
         >
           {user ? 'Save Design' : 'Sign in to Save'}
         </Button>
-        <Button variant="secondary" className="flex-1">
-          Create Order
+        <Button
+          variant="secondary"
+          onClick={handleCreateOrder}
+          className="flex-1"
+        >
+          {user ? 'Create Order' : 'Sign in to Order'}
         </Button>
       </div>
 

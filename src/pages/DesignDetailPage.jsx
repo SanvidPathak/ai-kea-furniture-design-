@@ -3,8 +3,12 @@ import { Link, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { getDesign, deleteDesign } from '../services/designService.js';
+import { saveOrder } from '../services/orderService.js';
 import { signOut } from '../services/authService.js';
+import { calculateTotalCost } from '../services/designGenerator.js';
 import { DesignPartsTable } from '../components/design/DesignPartsTable.jsx';
+import { CostBreakdown } from '../components/design/CostBreakdown.jsx';
+import { OrderForm } from '../components/order/OrderForm.jsx';
 import { Button } from '../components/common/Button.jsx';
 import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
 import { ErrorMessage } from '../components/common/ErrorMessage.jsx';
@@ -19,6 +23,7 @@ export function DesignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -39,6 +44,12 @@ export function DesignDetailPage() {
       if (designData.userId !== user.uid) {
         setErrorMessage('You do not have permission to view this design.');
         return;
+      }
+
+      // Recalculate price with current rates
+      if (designData.parts && designData.material) {
+        const recalculatedCost = calculateTotalCost(designData.parts, designData.material);
+        designData.totalCost = recalculatedCost;
       }
 
       setDesign(designData);
@@ -77,6 +88,27 @@ export function DesignDetailPage() {
     }
   };
 
+  const handleCreateOrder = () => {
+    setShowOrderForm(true);
+  };
+
+  const handleOrderSubmit = async (customerInfo) => {
+    try {
+      const orderData = {
+        designId: id, // Use the design ID from URL params
+        designSnapshot: design,
+        customerInfo,
+      };
+
+      await saveOrder(user.uid, orderData);
+      showToast('Order placed successfully! Check My Orders for details.', 'success');
+      setShowOrderForm(false);
+    } catch (error) {
+      console.error('Order creation error:', error);
+      throw error;
+    }
+  };
+
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Unknown date';
     const date = new Date(timestamp);
@@ -108,9 +140,12 @@ export function DesignDetailPage() {
             </Link>
             {user && (
               <>
-                <span className="text-sm text-neutral-600">
-                  {user.displayName}
-                </span>
+                <Link to="/account" className="hidden sm:flex items-center gap-2 text-sm text-neutral-600 hover:text-ikea-blue transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{user.displayName}</span>
+                </Link>
                 <Button variant="secondary" onClick={handleSignOut}>
                   Sign Out
                 </Button>
@@ -180,7 +215,7 @@ export function DesignDetailPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-4xl font-bold text-ikea-blue">
-                    ${design.totalCost.toFixed(2)}
+                    ₹{design.totalCost.toFixed(2)}
                   </div>
                   <div className="text-xs text-neutral-500">Total Cost</div>
                 </div>
@@ -225,6 +260,13 @@ export function DesignDetailPage() {
               <DesignPartsTable parts={design.parts} />
             </div>
 
+            {/* Cost Breakdown */}
+            <CostBreakdown
+              parts={design.parts}
+              material={design.material}
+              totalCost={design.totalCost}
+            />
+
             {/* Assembly Instructions */}
             <div className="card">
               <h3 className="text-xl font-semibold text-neutral-900 mb-4">
@@ -257,6 +299,22 @@ export function DesignDetailPage() {
               </div>
             )}
 
+            {/* Order Form Modal */}
+            {showOrderForm && (
+              <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+                <div className="bg-white rounded-lg max-w-2xl w-full my-4 sm:my-8 max-h-[95vh] overflow-y-auto">
+                  <div className="p-4 sm:p-6">
+                    <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 mb-4">Place Your Order</h2>
+                    <OrderForm
+                      design={design}
+                      onSubmit={handleOrderSubmit}
+                      onCancel={() => setShowOrderForm(false)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex gap-4">
               <Link to="/designs" className="flex-1">
@@ -271,7 +329,10 @@ export function DesignDetailPage() {
               >
                 Delete Design
               </Button>
-              <Button className="px-6 py-3">
+              <Button
+                onClick={handleCreateOrder}
+                className="px-6 py-3"
+              >
                 Create Order
               </Button>
             </div>

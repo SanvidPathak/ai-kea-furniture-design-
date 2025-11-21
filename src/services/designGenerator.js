@@ -3,11 +3,12 @@
  * Generates modular furniture designs with parts, cost, and assembly instructions
  */
 
-// Material properties: density (g/cm³) and cost per cm³
+// Material properties: density (g/cm³) and cost per cm³ in INR
+// Updated rates based on 2025 Indian market prices
 const MATERIALS = {
-  wood: { density: 0.6, cost: 0.002, defaultColor: '#8B4513' },
-  metal: { density: 7.8, cost: 0.005, defaultColor: '#C0C0C0' },
-  plastic: { density: 0.9, cost: 0.001, defaultColor: '#FFFFFF' },
+  wood: { density: 0.6, cost: 0.051, defaultColor: '#8B4513' }, // ₹85/sq ft plywood @ 1.8cm thickness
+  metal: { density: 7.8, cost: 0.429, defaultColor: '#C0C0C0' }, // ₹55/kg steel @ 7.8g/cm³ density
+  plastic: { density: 0.9, cost: 0.108, defaultColor: '#FFFFFF' }, // ₹120/kg PVC @ 0.9g/cm³ density
 };
 
 // Default dimensions for each furniture type (in cm)
@@ -230,7 +231,7 @@ function calculateVolume(dimensions) {
 /**
  * Calculate cost of parts
  */
-function calculateTotalCost(parts, material) {
+export function calculateTotalCost(parts, material) {
   const materialProps = MATERIALS[material];
   let totalCost = 0;
 
@@ -241,6 +242,32 @@ function calculateTotalCost(parts, material) {
   });
 
   return Math.round(totalCost * 100) / 100; // Round to 2 decimal places
+}
+
+/**
+ * Calculate detailed cost breakdown for each part
+ * @param {Array} parts - Array of part objects
+ * @param {string} material - Material type (wood, metal, plastic)
+ * @returns {Array} Array of parts with cost details
+ */
+export function calculateCostBreakdown(parts, material) {
+  const materialProps = MATERIALS[material];
+  const totalCost = calculateTotalCost(parts, material);
+
+  return parts.map(part => {
+    const volume = calculateVolume(part.dimensions);
+    const unitCost = volume * materialProps.cost;
+    const totalPartCost = unitCost * part.quantity;
+    const percentage = totalCost > 0 ? (totalPartCost / totalCost) * 100 : 0;
+
+    return {
+      ...part,
+      volume: Math.round(volume * 100) / 100, // cm³
+      unitCost: Math.round(unitCost * 100) / 100, // Cost per single part
+      totalPartCost: Math.round(totalPartCost * 100) / 100, // Total cost for all quantities
+      percentage: Math.round(percentage * 10) / 10, // Percentage of total cost
+    };
+  });
 }
 
 /**

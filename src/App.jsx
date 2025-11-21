@@ -6,6 +6,8 @@ import { LoginPage } from './pages/LoginPage.jsx';
 import { SignupPage } from './pages/SignupPage.jsx';
 import { CreateDesignPage } from './pages/CreateDesignPage.jsx';
 import { MyDesignsPage } from './pages/MyDesignsPage.jsx';
+import { MyOrdersPage } from './pages/MyOrdersPage.jsx';
+import { AccountPage } from './pages/AccountPage.jsx';
 import { DesignDetailPage } from './pages/DesignDetailPage.jsx';
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
             <Route path="/create" element={<CreateDesignPage />} />
             <Route path="/designs" element={<MyDesignsPage />} />
             <Route path="/designs/:id" element={<DesignDetailPage />} />
+            <Route path="/orders" element={<MyOrdersPage />} />
+            <Route path="/account" element={<AccountPage />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

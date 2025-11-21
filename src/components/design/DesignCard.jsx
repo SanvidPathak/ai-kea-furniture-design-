@@ -36,7 +36,7 @@ export function DesignCard({ design, onDelete }) {
           </div>
           <div className="text-left sm:text-right">
             <div className="text-xl sm:text-2xl font-bold text-ikea-blue">
-              ${design.totalCost?.toFixed(2) || '0.00'}
+              ₹{design.totalCost?.toFixed(2) || '0.00'}
             </div>
           </div>
         </div>
