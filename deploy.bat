@@ -24,8 +24,14 @@ echo 💾 Step 2: Committing changes...
 git commit -m "%COMMIT_MESSAGE%" -m "" -m "🤖 Generated with [Claude Code](https://claude.com/claude-code)" -m "" -m "Co-Authored-By: Claude <noreply@anthropic.com>"
 
 if errorlevel 1 (
-  echo ❌ Git commit failed. Aborting deploy.
-  exit /b 1
+  echo ⚠️  No changes to commit or commit failed.
+  git status
+  echo.
+  set /p CONTINUE="Continue with deployment anyway? (y/n): "
+  if /i not "%CONTINUE%"=="y" (
+    echo ❌ Deployment cancelled.
+    exit /b 1
+  )
 )
 
 echo.
@@ -33,8 +39,12 @@ echo 📤 Step 3: Pushing to GitHub...
 git push
 
 if errorlevel 1 (
-  echo ❌ Git push failed. Aborting deploy.
-  exit /b 1
+  echo ⚠️  Git push failed or nothing to push.
+  set /p CONTINUE="Continue with deployment anyway? (y/n): "
+  if /i not "%CONTINUE%"=="y" (
+    echo ❌ Deployment cancelled.
+    exit /b 1
+  )
 )
 
 echo.
