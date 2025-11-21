@@ -115,36 +115,76 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Status Card */}
-          <div className="card border-2 border-ikea-blue">
-            <div className="flex items-center justify-center mb-4">
-              <span className="text-4xl mr-3">✅</span>
-              <h2 className="text-3xl font-bold text-neutral-900">Platform Status</h2>
-            </div>
-            <div className="text-left space-y-3 max-w-2xl mx-auto">
-              <div className="flex items-center">
-                <span className="text-ikea-blue mr-3 font-bold">✓</span>
-                <span className="text-neutral-700">Firebase Authentication Service</span>
+          {/* How It Works */}
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-8 text-center">
+              How It Works
+            </h2>
+
+            <div className="grid md:grid-cols-3 gap-6 sm:gap-8 relative">
+              {/* Step 1 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-ikea-blue flex items-center justify-center mb-4">
+                  <span className="text-2xl sm:text-3xl font-bold text-white">1</span>
+                </div>
+                <div className="w-12 h-12 mb-3 flex items-center justify-center">
+                  <svg className="w-10 h-10 sm:w-12 sm:h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">Describe Your Idea</h3>
+                <p className="text-sm text-neutral-600">
+                  Tell us what furniture you need in plain English or select from our options
+                </p>
               </div>
-              <div className="flex items-center">
-                <span className="text-ikea-blue mr-3 font-bold">✓</span>
-                <span className="text-neutral-700">Firestore Database (mydb collection)</span>
+
+              {/* Arrow 1 */}
+              <div className="hidden md:block absolute top-10 left-1/3 w-1/6">
+                <svg className="w-full h-8" viewBox="0 0 100 40" fill="none">
+                  <path d="M0 20 L80 20 L70 15 M80 20 L70 25" stroke="#FBDA0C" strokeWidth="3" fill="none"/>
+                </svg>
               </div>
-              <div className="flex items-center">
-                <span className="text-ikea-blue mr-3 font-bold">✓</span>
-                <span className="text-neutral-700">Design Generator (5 furniture types, 3 materials)</span>
+
+              {/* Step 2 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-ikea-blue flex items-center justify-center mb-4">
+                  <span className="text-2xl sm:text-3xl font-bold text-white">2</span>
+                </div>
+                <div className="w-12 h-12 mb-3 flex items-center justify-center">
+                  <svg className="w-10 h-10 sm:w-12 sm:h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">AI Generates Design</h3>
+                <p className="text-sm text-neutral-600">
+                  Our AI creates a detailed design with parts, dimensions, and cost estimate
+                </p>
               </div>
-              <div className="flex items-center">
-                <span className="text-ikea-blue mr-3 font-bold">✓</span>
-                <span className="text-neutral-700">Gemini AI Integration (Natural Language → Design)</span>
+
+              {/* Arrow 2 */}
+              <div className="hidden md:block absolute top-10 right-1/3 w-1/6">
+                <svg className="w-full h-8" viewBox="0 0 100 40" fill="none">
+                  <path d="M0 20 L80 20 L70 15 M80 20 L70 25" stroke="#FBDA0C" strokeWidth="3" fill="none"/>
+                </svg>
               </div>
-              <div className="flex items-center">
-                <span className="text-ikea-blue mr-3 font-bold">✓</span>
-                <span className="text-neutral-700">Design & Order CRUD Services</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-ikea-blue mr-3 font-bold">✓</span>
-                <span className="text-neutral-700">Authentication UI Complete</span>
+
+              {/* Step 3 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-ikea-blue flex items-center justify-center mb-4">
+                  <span className="text-2xl sm:text-3xl font-bold text-white">3</span>
+                </div>
+                <div className="w-12 h-12 mb-3 flex items-center justify-center">
+                  <svg className="w-10 h-10 sm:w-12 sm:h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">Save & Review</h3>
+                <p className="text-sm text-neutral-600">
+                  View assembly instructions, materials list, and total cost before building
+                </p>
               </div>
             </div>
           </div>
