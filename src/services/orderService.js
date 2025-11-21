@@ -47,12 +47,18 @@ export async function saveOrder(userId, orderData) {
     const db = getFirestoreInstance();
     const ordersRef = collection(db, COLLECTION_NAME);
 
-    // Add userId, type, status, and timestamps to the order
+    // Add userId, type, status, status history, and timestamps to the order
     const orderDoc = {
       ...orderData,
       userId,
       type: DOCUMENT_TYPE,
       status: 'processing', // Default status
+      statusHistory: [
+        {
+          status: 'processing',
+          timestamp: new Date(),
+        }
+      ],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };

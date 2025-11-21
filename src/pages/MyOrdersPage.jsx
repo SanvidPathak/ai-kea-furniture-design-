@@ -220,6 +220,11 @@ export function MyOrdersPage() {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-2">
+                          <Link to={`/orders/${order.id}`} className="flex-1">
+                            <Button className="w-full">
+                              View Order Details
+                            </Button>
+                          </Link>
                           {order.designId && order.designId !== 'temp' && (
                             <Link to={`/designs/${order.designId}`} className="flex-1">
                               <Button variant="secondary" className="w-full">
