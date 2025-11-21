@@ -65,7 +65,13 @@ NOTES.md
 APPLY_SECURITY_RULES.md
 FIREBASE_SETUP_GUIDE.md
 GEMINI_INTEGRATION_COMPLETE.md
+DEPLOY_GUIDE.md
 docs/
+
+# Deployment scripts (local only)
+deploy.sh
+deploy.bat
+deploy.ps1
 
 # Test and debug files
 test-backend.js

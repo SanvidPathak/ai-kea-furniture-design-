@@ -7,7 +7,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "node test-backend.js"
+    "test": "node test-backend.js",
+    "deploy:firebase": "npm run build && firebase deploy --only hosting",
+    "deploy:full": "git add . && git push && npm run deploy:firebase"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
