@@ -66,6 +66,8 @@ APPLY_SECURITY_RULES.md
 FIREBASE_SETUP_GUIDE.md
 GEMINI_INTEGRATION_COMPLETE.md
 DEPLOY_GUIDE.md
+PHASES.md
+ALGORITHM_PLAN.md
 docs/
 
 # Deployment scripts (local only)
@@ -78,6 +80,8 @@ test-backend.js
 test-gemini-connection.js
 test-simple-write.js
 debug-firebase.js
+
+PROJECT_TIMELINE.csv
 
 # Claude files
 .claude/

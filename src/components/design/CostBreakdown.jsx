@@ -19,20 +19,20 @@ export function CostBreakdown({ parts, material, totalCost }) {
         <div className="flex items-center gap-3">
           <div className="text-2xl">💰</div>
           <div>
-            <h3 className="text-xl font-semibold text-neutral-900">
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-neutral-900">
               Cost Breakdown
             </h3>
-            <p className="text-sm text-neutral-600">
+            <p className="text-xs sm:text-sm text-neutral-600">
               Detailed cost analysis by part
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-ikea-blue">
+          <span className="text-lg sm:text-xl md:text-2xl font-bold text-ikea-blue">
             ₹{totalCost.toFixed(2)}
           </span>
           <svg
-            className={`w-6 h-6 text-neutral-600 transition-transform ${
+            className={`w-5 h-5 sm:w-6 sm:h-6 text-neutral-600 transition-transform ${
               isExpanded ? 'rotate-180' : ''
             }`}
             fill="none"
@@ -119,7 +119,7 @@ export function CostBreakdown({ parts, material, totalCost }) {
                   >
                     Total Cost:
                   </td>
-                  <td className="py-3 px-2 text-right font-bold text-ikea-blue text-lg">
+                  <td className="py-3 px-2 text-right font-bold text-ikea-blue text-base sm:text-lg">
                     ₹{totalCost.toFixed(2)}
                   </td>
                   <td className="py-3 px-2 text-right">
@@ -136,28 +136,28 @@ export function CostBreakdown({ parts, material, totalCost }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-neutral-200">
             <div className="text-center p-3 bg-earth-beige rounded">
               <div className="text-xs text-neutral-600 mb-1">Parts Types</div>
-              <div className="text-xl font-bold text-neutral-900">
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
                 {breakdown.length}
               </div>
             </div>
             <div className="text-center p-3 bg-earth-beige rounded">
               <div className="text-xs text-neutral-600 mb-1">Total Pieces</div>
-              <div className="text-xl font-bold text-neutral-900">
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
                 {breakdown.reduce((sum, part) => sum + part.quantity, 0)}
               </div>
             </div>
             <div className="text-center p-3 bg-earth-beige rounded">
               <div className="text-xs text-neutral-600 mb-1">Total Volume</div>
-              <div className="text-xl font-bold text-neutral-900">
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
                 {breakdown
                   .reduce((sum, part) => sum + part.volume * part.quantity, 0)
                   .toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
-                <span className="text-sm">cm³</span>
+                <span className="text-xs sm:text-sm">cm³</span>
               </div>
             </div>
             <div className="text-center p-3 bg-earth-beige rounded">
               <div className="text-xs text-neutral-600 mb-1">Avg Cost/Part</div>
-              <div className="text-xl font-bold text-neutral-900">
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
                 ₹
                 {(
                   totalCost /

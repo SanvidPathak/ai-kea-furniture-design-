@@ -202,10 +202,10 @@ export function OrderDetailPage() {
             <div className="card">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-2">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-900 mb-2">
                     Order #{order.id.slice(0, 8)}
                   </h2>
-                  <p className="text-sm text-neutral-600">
+                  <p className="text-xs sm:text-sm text-neutral-600">
                     Placed on {formatDate(order.createdAt)}
                   </p>
                 </div>
@@ -220,14 +220,14 @@ export function OrderDetailPage() {
 
             {/* Design Details */}
             <div className="card">
-              <h3 className="text-xl font-semibold text-neutral-900 mb-4">Ordered Design</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 mb-4">Ordered Design</h3>
               <div className="bg-earth-beige/50 rounded-lg p-4 mb-4">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h4 className="text-lg font-semibold text-neutral-900 capitalize mb-1">
+                    <h4 className="text-base sm:text-lg font-semibold text-neutral-900 capitalize mb-1">
                       {order.designSnapshot.furnitureType}
                     </h4>
-                    <div className="flex items-center gap-4 text-sm text-neutral-600">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-neutral-600">
                       <span className="capitalize">
                         <span className="font-medium">Material:</span> {order.designSnapshot.material}
                       </span>
@@ -241,7 +241,7 @@ export function OrderDetailPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-ikea-blue">
+                    <div className="text-xl sm:text-2xl font-bold text-ikea-blue">
                       ₹{order.designSnapshot.totalCost.toFixed(2)}
                     </div>
                   </div>
@@ -250,20 +250,20 @@ export function OrderDetailPage() {
                 {/* Dimensions */}
                 <div className="grid grid-cols-3 gap-2 p-3 bg-white rounded">
                   <div className="text-center">
-                    <div className="text-lg font-bold text-neutral-900">
-                      {order.designSnapshot.dimensions.length} cm
+                    <div className="text-sm sm:text-base md:text-lg font-bold text-neutral-900">
+                      {order.designSnapshot.dimensions.length} <span className="text-xs sm:text-base">cm</span>
                     </div>
                     <div className="text-xs text-neutral-600">Length</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-neutral-900">
-                      {order.designSnapshot.dimensions.width} cm
+                    <div className="text-sm sm:text-base md:text-lg font-bold text-neutral-900">
+                      {order.designSnapshot.dimensions.width} <span className="text-xs sm:text-base">cm</span>
                     </div>
                     <div className="text-xs text-neutral-600">Width</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-neutral-900">
-                      {order.designSnapshot.dimensions.height} cm
+                    <div className="text-sm sm:text-base md:text-lg font-bold text-neutral-900">
+                      {order.designSnapshot.dimensions.height} <span className="text-xs sm:text-base">cm</span>
                     </div>
                     <div className="text-xs text-neutral-600">Height</div>
                   </div>
@@ -271,7 +271,7 @@ export function OrderDetailPage() {
               </div>
 
               {/* Parts List */}
-              <h4 className="text-lg font-semibold text-neutral-900 mb-3 mt-6">Parts List</h4>
+              <h4 className="text-base sm:text-lg font-semibold text-neutral-900 mb-3 mt-6">Parts List</h4>
               <DesignPartsTable parts={order.designSnapshot.parts} />
             </div>
 
@@ -284,24 +284,24 @@ export function OrderDetailPage() {
 
             {/* Delivery Information */}
             <div className="card">
-              <h3 className="text-xl font-semibold text-neutral-900 mb-4">Delivery Information</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 mb-4">Delivery Information</h3>
               <div className="bg-earth-beige/50 rounded p-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm font-medium text-neutral-700 mb-1">Name</div>
-                    <div className="text-neutral-900">{order.customerInfo.name}</div>
+                    <div className="text-xs sm:text-sm font-medium text-neutral-700 mb-1">Name</div>
+                    <div className="text-sm sm:text-base text-neutral-900">{order.customerInfo.name}</div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-neutral-700 mb-1">Phone</div>
-                    <div className="text-neutral-900">{order.customerInfo.phone}</div>
+                    <div className="text-xs sm:text-sm font-medium text-neutral-700 mb-1">Phone</div>
+                    <div className="text-sm sm:text-base text-neutral-900">{order.customerInfo.phone}</div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-neutral-700 mb-1">Email</div>
-                    <div className="text-neutral-900">{order.customerInfo.email}</div>
+                    <div className="text-xs sm:text-sm font-medium text-neutral-700 mb-1">Email</div>
+                    <div className="text-sm sm:text-base text-neutral-900">{order.customerInfo.email}</div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-neutral-700 mb-1">Address</div>
-                    <div className="text-neutral-900">
+                    <div className="text-xs sm:text-sm font-medium text-neutral-700 mb-1">Address</div>
+                    <div className="text-sm sm:text-base text-neutral-900">
                       {order.customerInfo.address}, {order.customerInfo.city}<br />
                       {order.customerInfo.state} - {order.customerInfo.pincode}
                     </div>

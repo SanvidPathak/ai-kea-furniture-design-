@@ -225,10 +225,10 @@ export function DesignDetailPage() {
             <div className="card">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-4xl font-bold text-neutral-900 capitalize mb-2">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-900 capitalize mb-2">
                     {design.furnitureType}
                   </h2>
-                  <div className="flex items-center gap-4 text-sm text-neutral-600">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-neutral-600">
                     <span className="flex items-center gap-1 capitalize">
                       <span className="font-medium">Material:</span> {design.material}
                     </span>
@@ -245,7 +245,7 @@ export function DesignDetailPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-ikea-blue">
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-ikea-blue">
                     ₹{design.totalCost.toFixed(2)}
                   </div>
                   <div className="text-xs text-neutral-500">Total Cost</div>
@@ -253,22 +253,22 @@ export function DesignDetailPage() {
               </div>
 
               {/* Dimensions */}
-              <div className="grid grid-cols-3 gap-4 p-4 bg-earth-beige rounded-lg">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 bg-earth-beige rounded-lg">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-neutral-900">
-                    {design.dimensions.length} cm
+                  <div className="text-base sm:text-xl md:text-2xl font-bold text-neutral-900">
+                    {design.dimensions.length} <span className="text-xs sm:text-base">cm</span>
                   </div>
                   <div className="text-xs text-neutral-600">Length</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-neutral-900">
-                    {design.dimensions.width} cm
+                  <div className="text-base sm:text-xl md:text-2xl font-bold text-neutral-900">
+                    {design.dimensions.width} <span className="text-xs sm:text-base">cm</span>
                   </div>
                   <div className="text-xs text-neutral-600">Width</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-neutral-900">
-                    {design.dimensions.height} cm
+                  <div className="text-base sm:text-xl md:text-2xl font-bold text-neutral-900">
+                    {design.dimensions.height} <span className="text-xs sm:text-base">cm</span>
                   </div>
                   <div className="text-xs text-neutral-600">Height</div>
                 </div>
@@ -287,7 +287,7 @@ export function DesignDetailPage() {
 
             {/* Parts List */}
             <div className="card">
-              <h3 className="text-xl font-semibold text-neutral-900 mb-4">Parts List</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 mb-4">Parts List</h3>
               <DesignPartsTable parts={design.parts} />
             </div>
 
@@ -300,7 +300,7 @@ export function DesignDetailPage() {
 
             {/* Assembly Instructions */}
             <div className="card">
-              <h3 className="text-xl font-semibold text-neutral-900 mb-4">
+              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 mb-4">
                 Assembly Instructions
               </h3>
               <ol className="space-y-2">
@@ -309,7 +309,7 @@ export function DesignDetailPage() {
                     <span className="flex-shrink-0 w-6 h-6 rounded-full bg-ikea-blue text-white text-sm font-semibold flex items-center justify-center">
                       {index + 1}
                     </span>
-                    <span className="text-neutral-700 pt-0.5">{instruction}</span>
+                    <span className="text-sm sm:text-base text-neutral-700 pt-0.5">{instruction}</span>
                   </li>
                 ))}
               </ol>
