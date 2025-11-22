@@ -7,7 +7,7 @@ import { signOut } from '../services/authService.js';
 import { calculateTotalCost } from '../services/designGenerator.js';
 import { DesignCard } from '../components/design/DesignCard.jsx';
 import { Button } from '../components/common/Button.jsx';
-import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
+import { SkeletonList } from '../components/common/SkeletonCard.jsx';
 import { ErrorMessage } from '../components/common/ErrorMessage.jsx';
 import { Logo } from '../components/common/Logo.jsx';
 
@@ -177,15 +177,26 @@ export function MyDesignsPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Search */}
                 <div className="flex-1">
+                  <label htmlFor="design-search" className="sr-only">
+                    Search designs
+                  </label>
                   <div className="relative">
                     <input
+                      id="design-search"
                       type="text"
                       placeholder="Search by furniture type or material..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                      aria-label="Search designs by furniture type or material"
                     />
-                    <svg className="absolute left-3 top-2.5 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="absolute left-3 top-2.5 w-5 h-5 text-neutral-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -193,10 +204,15 @@ export function MyDesignsPage() {
 
                 {/* Sort */}
                 <div className="sm:w-48">
+                  <label htmlFor="design-sort" className="sr-only">
+                    Sort designs
+                  </label>
                   <select
+                    id="design-sort"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     className="w-full px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                    aria-label="Sort designs"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -210,9 +226,7 @@ export function MyDesignsPage() {
 
           {/* Loading State */}
           {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <LoadingSpinner size="xl" />
-            </div>
+            <SkeletonList count={6} />
           ) : designs.length === 0 ? (
             /* Empty State */
             <div className="card text-center py-16">

@@ -12,7 +12,7 @@ import {
 import { getUserDesigns } from '../services/designService.js';
 import { getUserOrders } from '../services/orderService.js';
 import { Button } from '../components/common/Button.jsx';
-import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
+import { SkeletonProfile } from '../components/common/SkeletonCard.jsx';
 import { ErrorMessage } from '../components/common/ErrorMessage.jsx';
 import { Logo } from '../components/common/Logo.jsx';
 
@@ -262,9 +262,7 @@ export function AccountPage() {
           <ErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner />
-            </div>
+            <SkeletonProfile />
           ) : (
             <div className="space-y-6">
               {/* Profile Card */}

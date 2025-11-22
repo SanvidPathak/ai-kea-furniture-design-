@@ -5,7 +5,7 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import { getUserOrders, deleteOrder, getOrderStatusDisplay } from '../services/orderService.js';
 import { signOut } from '../services/authService.js';
 import { Button } from '../components/common/Button.jsx';
-import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
+import { SkeletonList } from '../components/common/SkeletonCard.jsx';
 import { ErrorMessage } from '../components/common/ErrorMessage.jsx';
 import { Logo } from '../components/common/Logo.jsx';
 
@@ -182,27 +182,44 @@ export function MyOrdersPage() {
             <div className="card mb-6">
               <div className="flex flex-col gap-4">
                 {/* Search */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search by order ID, furniture type, or customer name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
-                  />
-                  <svg className="absolute left-3 top-2.5 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                <div>
+                  <label htmlFor="order-search" className="sr-only">
+                    Search orders
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="order-search"
+                      type="text"
+                      placeholder="Search by order ID, furniture type, or customer name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                      aria-label="Search orders by ID, furniture type, or customer name"
+                    />
+                    <svg
+                      className="absolute left-3 top-2.5 w-5 h-5 text-neutral-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                 </div>
 
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">Status</label>
+                    <label htmlFor="status-filter" className="block text-sm font-medium text-neutral-700 mb-1">
+                      Status
+                    </label>
                     <select
+                      id="status-filter"
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
                       className="w-full px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                      aria-label="Filter orders by status"
                     >
                       <option value="all">All Statuses</option>
                       <option value="processing">Processing</option>
@@ -215,10 +232,14 @@ export function MyOrdersPage() {
                   </div>
 
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">Sort By</label>
+                    <label htmlFor="order-sort" className="block text-sm font-medium text-neutral-700 mb-1">
+                      Sort By
+                    </label>
                     <select
+                      id="order-sort"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
+                      aria-label="Sort orders"
                       className="w-full px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
                     >
                       <option value="newest">Newest First</option>
@@ -232,9 +253,7 @@ export function MyOrdersPage() {
           )}
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner />
-            </div>
+            <SkeletonList count={5} />
           ) : orders.length === 0 ? (
             <div className="card text-center py-12">
               <div className="text-6xl mb-4">📦</div>
