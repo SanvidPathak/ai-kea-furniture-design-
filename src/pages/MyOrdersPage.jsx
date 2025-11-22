@@ -16,6 +16,9 @@ export function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [deletingOrderId, setDeletingOrderId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // all, processing, confirmed, manufacturing, shipped, delivered, cancelled
+  const [sortBy, setSortBy] = useState('newest'); // newest, oldest, cost
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -65,6 +68,43 @@ export function MyOrdersPage() {
       console.error('Sign out error:', error);
     }
   };
+
+  // Filter and sort orders
+  const getFilteredAndSortedOrders = () => {
+    let filtered = orders;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(order =>
+        order.designSnapshot?.furnitureType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customerInfo?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.id?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(order => order.status === statusFilter);
+    }
+
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'cost':
+          return (b.designSnapshot?.totalCost || 0) - (a.designSnapshot?.totalCost || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  };
+
+  const filteredOrders = getFilteredAndSortedOrders();
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -137,6 +177,60 @@ export function MyOrdersPage() {
 
           <ErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
 
+          {/* Search and Filter */}
+          {!loading && orders.length > 0 && (
+            <div className="card mb-6">
+              <div className="flex flex-col gap-4">
+                {/* Search */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by order ID, furniture type, or customer name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                  />
+                  <svg className="absolute left-3 top-2.5 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">Status</label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="processing">Processing</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="manufacturing">Manufacturing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">Sort By</label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="cost">By Cost (High-Low)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex justify-center py-12">
               <LoadingSpinner />
@@ -154,9 +248,35 @@ export function MyOrdersPage() {
                 <Button>Create Your First Design</Button>
               </Link>
             </div>
+          ) : filteredOrders.length === 0 && (searchTerm || statusFilter !== 'all') ? (
+            /* No Search/Filter Results */
+            <div className="card text-center py-16">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-2xl font-semibold text-neutral-900 mb-2">
+                No Orders Found
+              </h3>
+              <p className="text-neutral-600 mb-6 max-w-md mx-auto">
+                No orders match your search criteria. Try adjusting your filters.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button variant="secondary" onClick={() => setSearchTerm('')}>
+                  Clear Search
+                </Button>
+                <Button variant="secondary" onClick={() => setStatusFilter('all')}>
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
           ) : (
-            <div className="space-y-4">
-              {orders.map((order) => {
+            <>
+              <div className="mb-4">
+                <p className="text-sm text-neutral-600">
+                  Showing {filteredOrders.length} of {orders.length} order{orders.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {filteredOrders.map((order) => {
                 const statusDisplay = getOrderStatusDisplay(order.status);
                 const design = order.designSnapshot;
 
@@ -247,8 +367,9 @@ export function MyOrdersPage() {
                     </div>
                   </div>
                 );
-              })}
-            </div>
+                })}
+              </div>
+            </>
           )}
         </div>
       </main>

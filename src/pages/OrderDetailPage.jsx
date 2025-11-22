@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { getOrder, deleteOrder, getOrderStatusDisplay } from '../services/orderService.js';
 import { signOut } from '../services/authService.js';
+import { exportDesignAsPDF, exportPartsAsCSV, exportAssemblyInstructionsAsPDF } from '../utils/exportUtils.js';
 import { OrderStatusTimeline } from '../components/order/OrderStatusTimeline.jsx';
 import { DesignPartsTable } from '../components/design/DesignPartsTable.jsx';
 import { CostBreakdown } from '../components/design/CostBreakdown.jsx';
@@ -76,6 +77,36 @@ export function OrderDetailPage() {
       await signOut();
     } catch (error) {
       console.error('Sign out error:', error);
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      exportDesignAsPDF(order.designSnapshot);
+      showToast('PDF exported successfully!', 'success');
+    } catch (error) {
+      console.error('Export PDF error:', error);
+      showToast(`Failed to export PDF: ${error.message}`, 'error');
+    }
+  };
+
+  const handleExportInstructions = () => {
+    try {
+      exportAssemblyInstructionsAsPDF(order.designSnapshot);
+      showToast('Assembly instructions exported successfully!', 'success');
+    } catch (error) {
+      console.error('Export instructions error:', error);
+      showToast(`Failed to export instructions: ${error.message}`, 'error');
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      exportPartsAsCSV(order.designSnapshot);
+      showToast('Parts list exported successfully!', 'success');
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      showToast(`Failed to export CSV: ${error.message}`, 'error');
     }
   };
 
@@ -276,6 +307,34 @@ export function OrderDetailPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Export Options */}
+            <div className="card bg-earth-beige/50">
+              <h3 className="text-lg font-semibold text-neutral-900 mb-4">Export Options</h3>
+              <div className="grid sm:grid-cols-3 gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={handleExportPDF}
+                  className="w-full"
+                >
+                  📄 Export as PDF
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleExportInstructions}
+                  className="w-full"
+                >
+                  📋 Assembly Instructions
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleExportCSV}
+                  className="w-full"
+                >
+                  📊 Parts List (CSV)
+                </Button>
               </div>
             </div>
 

@@ -17,6 +17,8 @@ export function MyDesignsPage() {
   const [designs, setDesigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('newest'); // newest, oldest, name, cost
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -73,6 +75,39 @@ export function MyDesignsPage() {
       console.error('Sign out error:', error);
     }
   };
+
+  // Filter and sort designs
+  const getFilteredAndSortedDesigns = () => {
+    let filtered = designs;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(design =>
+        design.furnitureType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        design.material?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'name':
+          return (a.furnitureType || '').localeCompare(b.furnitureType || '');
+        case 'cost':
+          return (b.totalCost || 0) - (a.totalCost || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  };
+
+  const filteredDesigns = getFilteredAndSortedDesigns();
 
   // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
@@ -136,6 +171,43 @@ export function MyDesignsPage() {
 
           <ErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
 
+          {/* Search and Filter */}
+          {!loading && designs.length > 0 && (
+            <div className="card mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Search */}
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search by furniture type or material..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                    />
+                    <svg className="absolute left-3 top-2.5 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Sort */}
+                <div className="sm:w-48">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name">By Name (A-Z)</option>
+                    <option value="cost">By Cost (High-Low)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Loading State */}
           {loading ? (
             <div className="flex justify-center items-center py-20">
@@ -157,12 +229,26 @@ export function MyDesignsPage() {
                 </Button>
               </Link>
             </div>
+          ) : filteredDesigns.length === 0 && searchTerm ? (
+            /* No Search Results */
+            <div className="card text-center py-16">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-2xl font-semibold text-neutral-900 mb-2">
+                No Results Found
+              </h3>
+              <p className="text-neutral-600 mb-6 max-w-md mx-auto">
+                No designs match "{searchTerm}". Try a different search term.
+              </p>
+              <Button variant="secondary" onClick={() => setSearchTerm('')}>
+                Clear Search
+              </Button>
+            </div>
           ) : (
             /* Designs Grid */
             <>
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-neutral-600">
-                  Showing {designs.length} design{designs.length !== 1 ? 's' : ''}
+                  Showing {filteredDesigns.length} of {designs.length} design{designs.length !== 1 ? 's' : ''}
                 </p>
                 <Link to="/create">
                   <Button variant="secondary">+ New Design</Button>
@@ -170,7 +256,7 @@ export function MyDesignsPage() {
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {designs.map((design) => (
+                {filteredDesigns.map((design) => (
                   <DesignCard
                     key={design.id}
                     design={design}

@@ -6,6 +6,7 @@ import { getDesign, deleteDesign } from '../services/designService.js';
 import { saveOrder } from '../services/orderService.js';
 import { signOut } from '../services/authService.js';
 import { calculateTotalCost } from '../services/designGenerator.js';
+import { exportDesignAsPDF, exportPartsAsCSV, exportAssemblyInstructionsAsPDF } from '../utils/exportUtils.js';
 import { DesignPartsTable } from '../components/design/DesignPartsTable.jsx';
 import { CostBreakdown } from '../components/design/CostBreakdown.jsx';
 import { OrderForm } from '../components/order/OrderForm.jsx';
@@ -90,6 +91,36 @@ export function DesignDetailPage() {
 
   const handleCreateOrder = () => {
     setShowOrderForm(true);
+  };
+
+  const handleExportPDF = () => {
+    try {
+      exportDesignAsPDF(design);
+      showToast('PDF exported successfully!', 'success');
+    } catch (error) {
+      console.error('Export PDF error:', error);
+      showToast(`Failed to export PDF: ${error.message}`, 'error');
+    }
+  };
+
+  const handleExportInstructions = () => {
+    try {
+      exportAssemblyInstructionsAsPDF(design);
+      showToast('Assembly instructions exported successfully!', 'success');
+    } catch (error) {
+      console.error('Export instructions error:', error);
+      showToast(`Failed to export instructions: ${error.message}`, 'error');
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      exportPartsAsCSV(design);
+      showToast('Parts list exported successfully!', 'success');
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      showToast(`Failed to export CSV: ${error.message}`, 'error');
+    }
   };
 
   const handleOrderSubmit = async (customerInfo) => {
@@ -315,8 +346,36 @@ export function DesignDetailPage() {
               </div>
             )}
 
+            {/* Export Options */}
+            <div className="card bg-earth-beige/50">
+              <h3 className="text-lg font-semibold text-neutral-900 mb-4">Export Options</h3>
+              <div className="grid sm:grid-cols-3 gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={handleExportPDF}
+                  className="w-full"
+                >
+                  📄 Export as PDF
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleExportInstructions}
+                  className="w-full"
+                >
+                  📋 Assembly Instructions
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleExportCSV}
+                  className="w-full"
+                >
+                  📊 Parts List (CSV)
+                </Button>
+              </div>
+            </div>
+
             {/* Action Buttons */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/designs" className="flex-1">
                 <Button variant="secondary" className="w-full">
                   ← Back to My Designs
@@ -325,13 +384,13 @@ export function DesignDetailPage() {
               <Button
                 onClick={handleDelete}
                 loading={deleting}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
               >
                 Delete Design
               </Button>
               <Button
                 onClick={handleCreateOrder}
-                className="px-6 py-3"
+                className="flex-1"
               >
                 Create Order
               </Button>
