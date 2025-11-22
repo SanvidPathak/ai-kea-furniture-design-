@@ -26,31 +26,53 @@ AI-KEA is a full-stack web application that allows users to design custom modula
   - View detailed design specifications
   - Delete saved designs
   - Real-time toast notifications
+  - User account management
+  - Order tracking and history
 
 - **Design Output**
   - Complete parts list with quantities and dimensions
   - Step-by-step assembly instructions
-  - Total cost calculation
+  - Total cost calculation with detailed breakdown
   - Estimated assembly time
   - Material and color visualization
+  - Export to PDF, CSV, and assembly instructions
+
+- **Order Management**
+  - Place orders from saved designs
+  - Order status tracking (Processing → Confirmed → Manufacturing → Shipped → Delivered)
+  - Order history and details
+  - Export order information
+
+- **Search & Filter**
+  - Search designs by type or material
+  - Sort designs (newest, oldest, by name, by cost)
+  - Filter orders by status
+  - Real-time search results
 
 ## Tech Stack
 
 ### Frontend
-- **React 19** - Modern UI library with hooks
-- **Vite 6** - Fast build tool and dev server
+- **React 19** - Modern UI library with hooks and Suspense
+- **Vite 6** - Fast build tool with code splitting
 - **Tailwind CSS** - Utility-first CSS framework with IKEA-inspired design system
-- **React Router** - Client-side routing
+- **React Router v6** - Client-side routing with lazy loading
+- **jsPDF** - PDF generation for exports
+- **html2canvas** - Design visualization
 
 ### Backend
 - **Firebase Authentication** - Secure user authentication
-- **Cloud Firestore** - NoSQL database for design storage
+- **Cloud Firestore** - NoSQL database for designs and orders
+- **Firebase Storage** - File storage for design assets
 - **Google Gemini AI** - AI-powered natural language processing (gemini-2.5-flash model)
 
-### Styling
-- IKEA-inspired color palette (#0057AD blue, #FBDA0C yellow, earth tones)
-- Responsive design (mobile, tablet, desktop)
+### Styling & UX
+- IKEA-inspired color palette (#0058A3 blue, #FFDB00 yellow, earth tones)
+- Fully responsive design (mobile-first approach)
 - Smooth animations and transitions
+- Loading skeletons for better perceived performance
+- Error boundaries for robust error handling
+- Accessibility features (ARIA labels, keyboard navigation)
+- PWA support with manifest
 
 ## Prerequisites
 
@@ -222,7 +244,20 @@ npm run preview
 
 # Lint code
 npm run lint
+
+# Deploy to Firebase (after setup)
+npm run deploy
 ```
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions including:
+- Firebase Hosting setup
+- Environment configuration
+- Security rules
+- Custom domain setup
+- Analytics integration
+- Performance monitoring
 
 ## Environment Variables Reference
 
@@ -238,7 +273,12 @@ npm run lint
 
 ## Firestore Data Structure
 
-The app uses a single Firestore collection called `mydb`:
+The app uses multiple Firestore collections:
+
+### Collections
+- `users` - User profiles and settings
+- `designs` - Furniture designs
+- `orders` - Order information and tracking
 
 ### Design Document Schema
 
@@ -274,7 +314,39 @@ The app uses a single Firestore collection called `mydb`:
   assemblyTime: 45,  // minutes
   aiEnhanced: false,
   userQuery: null,   // Original AI prompt if AI-generated
-  createdAt: 1234567890000
+  createdAt: Timestamp,
+  updatedAt: Timestamp
+}
+```
+
+### Order Document Schema
+
+```javascript
+{
+  id: "auto-generated-id",
+  userId: "firebase-user-uid",
+  type: "order",
+  designId: "design-doc-id",
+  designSnapshot: { /* Full design object */ },
+  customerInfo: {
+    name: "John Doe",
+    email: "john@example.com",
+    phone: "+91 9876543210",
+    address: "123 Main St",
+    city: "Mumbai",
+    state: "Maharashtra",
+    pincode: "400001"
+  },
+  status: "processing" | "confirmed" | "manufacturing" | "shipped" | "delivered" | "cancelled",
+  statusHistory: [
+    {
+      status: "processing",
+      timestamp: Timestamp
+    }
+    // ... status changes
+  ],
+  createdAt: Timestamp,
+  updatedAt: Timestamp
 }
 ```
 

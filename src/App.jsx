@@ -15,6 +15,7 @@ const MyOrdersPage = lazy(() => import('./pages/MyOrdersPage.jsx').then(m => ({ 
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage.jsx').then(m => ({ default: m.OrderDetailPage })));
 const AccountPage = lazy(() => import('./pages/AccountPage.jsx').then(m => ({ default: m.AccountPage })));
 const DesignDetailPage = lazy(() => import('./pages/DesignDetailPage.jsx').then(m => ({ default: m.DesignDetailPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx').then(m => ({ default: m.NotFoundPage })));
 
 // Loading fallback component
 function PageLoader() {
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/orders" element={<MyOrdersPage />} />
                 <Route path="/orders/:id" element={<OrderDetailPage />} />
                 <Route path="/account" element={<AccountPage />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
           </ToastProvider>

@@ -1,0 +1,7 @@
+# AI-KEA Robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemaps
+Sitemap: https://ai-kea.com/sitemap.xml
