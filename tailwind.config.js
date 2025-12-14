@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -59,6 +60,7 @@ export default {
           700: '#404040',
           800: '#262626',
           900: '#171717',
+          950: '#0a0a0a',
         },
       },
       fontFamily: {
@@ -68,6 +70,16 @@ export default {
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+      },
+      animation: {
+        'aurora': 'aurora 20s linear infinite',
+      },
+      keyframes: {
+        aurora: {
+          '0%': { backgroundPosition: '50% 50%, 50% 50%' },
+          '100%': { backgroundPosition: '350% 50%, 350% 50%' },
+        },
       },
     },
   },

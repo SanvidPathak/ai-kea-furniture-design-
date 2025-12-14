@@ -27,10 +27,10 @@ export function DesignCard({ design, onDelete }) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
           <div className="flex-1">
-            <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 capitalize group-hover:text-ikea-blue transition-colors">
+            <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white capitalize group-hover:text-ikea-blue transition-colors">
               {design.furnitureType}
             </h3>
-            <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               Created {formatDate(design.createdAt)}
             </p>
           </div>
@@ -43,23 +43,23 @@ export function DesignCard({ design, onDelete }) {
 
         {/* Design Info */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-300">
             <span className="font-medium">Material:</span>
             <div className="flex items-center gap-1 capitalize">
               <div
-                className="w-3 h-3 rounded border border-neutral-300"
+                className="w-3 h-3 rounded border border-neutral-300 dark:border-neutral-600"
                 style={{ backgroundColor: design.materialColor }}
               />
               {design.material}
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-300">
             <span className="font-medium">Dimensions:</span>
             <span className="font-mono text-xs sm:text-sm">
               {design.dimensions?.length} × {design.dimensions?.width} × {design.dimensions?.height} cm
             </span>
           </div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-300">
             <span className="font-medium">Parts:</span>
             <span>{design.parts?.length || 0} types</span>
           </div>

@@ -16,8 +16,15 @@ body {
   font-family: 'Inter', 'Noto Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #fafafa; /* Neutral, warm background */
-  color: #262626; /* Dark neutral for text */
+  background-color: #fafafa;
+  /* Neutral, warm background */
+  color: #262626;
+  /* Dark neutral for text */
+}
+
+.dark body {
+  background-color: #171717;
+  color: #f5f5f5;
 }
 
 /* Custom Scrollbar - Subtle and modern */
@@ -46,27 +53,34 @@ body {
 
 /* Custom Utility Classes */
 @layer components {
+
   /* IKEA-style button */
   .btn-ikea {
-    @apply bg-ikea-blue text-white px-6 py-3 rounded font-semibold hover:bg-primary-700 transition-all duration-200 shadow-card;
+    @apply bg-ikea-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 active:scale-95 transition-all duration-200 shadow-card hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-accent {
-    @apply bg-accent-500 text-neutral-900 px-6 py-3 rounded font-semibold hover:bg-accent-600 transition-all duration-200 shadow-card;
+    @apply bg-ikea-yellow text-neutral-900 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 active:scale-95 transition-all duration-200 shadow-card hover:shadow-lg;
   }
 
   .btn-secondary {
-    @apply bg-white text-primary-600 px-6 py-3 rounded font-semibold border-2 border-primary-600 hover:bg-primary-50 transition-all duration-200;
+    @apply bg-white/80 backdrop-blur-sm text-primary-600 px-6 py-3 rounded-lg font-semibold border border-primary-200 hover:bg-primary-50 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md;
   }
 
-  /* Card style */
+  /* Glassmorphism Card style */
   .card {
-    @apply bg-white rounded-lg shadow-card p-6 transition-shadow duration-200 hover:shadow-soft;
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:bg-neutral-800/70 dark:border-white/10;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-lg border border-white/30 dark:bg-neutral-900/60 dark:border-white/10;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
 
   /* Input style - clean and accessible */
   .input-field {
-    @apply w-full px-4 py-3 border-2 border-neutral-300 rounded focus:border-primary-500 focus:outline-none transition-colors duration-200;
+    @apply w-full px-4 py-3 bg-white/80 border border-neutral-200 rounded-lg focus:border-ikea-blue focus:ring-2 focus:ring-ikea-blue/20 focus:outline-none transition-all duration-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:focus:ring-ikea-blue/40;
   }
 
   /* Section container */
@@ -86,6 +100,7 @@ body {
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);

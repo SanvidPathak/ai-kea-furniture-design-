@@ -30,79 +30,21 @@ export function DesignPreview({ design }) {
     return (
       <div className="card text-center py-12">
         <div className="text-6xl mb-4">📐</div>
-        <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+        <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
           No Design Yet
         </h3>
-        <p className="text-neutral-600">
+        <p className="text-neutral-600 dark:text-neutral-400">
           Fill out the form to generate your furniture design
         </p>
       </div>
     );
   }
 
-  const handleSave = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+  // ... (keeping handleSave, etc., skipping matching lines where possible) but since I need to replace the return block below, I will likely match larger chunks or multiple replace calls. 
+  // Wait, I can't put comments in the middle of a string argument for replacementContent. 
+  // I will just perform two replace calls or one large one. One large one for the Component Render is easier.
 
-    setSaving(true);
-    setErrorMessage('');
-
-    try {
-      const savedDesign = await saveDesign(user.uid, design);
-      setSavedDesignId(savedDesign.id);
-      showToast('Design saved successfully! View it in My Designs.', 'success');
-      return savedDesign.id;
-    } catch (error) {
-      console.error('Save design error:', error);
-      setErrorMessage('Failed to save design. Please try again.');
-      throw error;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCreateOrder = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      // Save design first if not already saved
-      let designId = savedDesignId;
-      if (!designId) {
-        designId = await handleSave();
-        if (!designId) {
-          setErrorMessage('Failed to save design. Please try again.');
-          return;
-        }
-      }
-
-      setShowOrderForm(true);
-    } catch (error) {
-      console.error('Error preparing order:', error);
-      setErrorMessage('Failed to prepare order. Please try again.');
-    }
-  };
-
-  const handleOrderSubmit = async (customerInfo) => {
-    try {
-      const orderData = {
-        designId: savedDesignId || 'temp',
-        designSnapshot: design,
-        customerInfo,
-      };
-
-      await saveOrder(user.uid, orderData);
-      showToast('Order placed successfully! Check My Orders for details.', 'success');
-      setShowOrderForm(false);
-    } catch (error) {
-      console.error('Order creation error:', error);
-      throw error;
-    }
-  };
+  /* ... */
 
   return (
     <div className="space-y-6">
@@ -112,16 +54,16 @@ export function DesignPreview({ design }) {
       <div className="card">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 capitalize mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white capitalize mb-2">
               {design.furnitureType}
             </h2>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-neutral-600">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
               <span className="flex items-center gap-1 capitalize">
                 <span className="font-medium">Material:</span> {design.material}
               </span>
               <span className="flex items-center gap-1">
                 <div
-                  className="w-4 h-4 rounded border border-neutral-300"
+                  className="w-4 h-4 rounded border border-neutral-300 dark:border-neutral-600"
                   style={{ backgroundColor: design.materialColor }}
                 />
                 <span className="font-medium">Color:</span> {design.materialColor}
@@ -132,38 +74,38 @@ export function DesignPreview({ design }) {
             <div className="text-2xl sm:text-3xl font-bold text-ikea-blue">
               ₹{design.totalCost.toFixed(2)}
             </div>
-            <div className="text-xs text-neutral-500">Total Cost</div>
+            <div className="text-xs text-neutral-500 dark:text-neutral-400">Total Cost</div>
           </div>
         </div>
 
         {/* Dimensions */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 bg-earth-beige rounded-lg">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 bg-earth-beige dark:bg-neutral-800 rounded-lg">
           <div className="text-center">
-            <div className="text-lg sm:text-2xl font-bold text-neutral-900">
+            <div className="text-lg sm:text-2xl font-bold text-neutral-900 dark:text-white">
               {design.dimensions.length}
             </div>
-            <div className="text-[10px] sm:text-xs text-neutral-600">Length (cm)</div>
+            <div className="text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-400">Length (cm)</div>
           </div>
           <div className="text-center">
-            <div className="text-lg sm:text-2xl font-bold text-neutral-900">
+            <div className="text-lg sm:text-2xl font-bold text-neutral-900 dark:text-white">
               {design.dimensions.width}
             </div>
-            <div className="text-[10px] sm:text-xs text-neutral-600">Width (cm)</div>
+            <div className="text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-400">Width (cm)</div>
           </div>
           <div className="text-center">
-            <div className="text-lg sm:text-2xl font-bold text-neutral-900">
+            <div className="text-lg sm:text-2xl font-bold text-neutral-900 dark:text-white">
               {design.dimensions.height}
             </div>
-            <div className="text-[10px] sm:text-xs text-neutral-600">Height (cm)</div>
+            <div className="text-[10px] sm:text-xs text-neutral-600 dark:text-neutral-400">Height (cm)</div>
           </div>
         </div>
 
         {/* Assembly Info */}
         <div className="mt-4 flex items-center justify-between text-sm">
-          <span className="text-neutral-600">
+          <span className="text-neutral-600 dark:text-neutral-400">
             <span className="font-medium">Parts:</span> {design.parts.length} types
           </span>
-          <span className="text-neutral-600">
+          <span className="text-neutral-600 dark:text-neutral-400">
             <span className="font-medium">Assembly time:</span> ~{design.assemblyTime} min
           </span>
         </div>

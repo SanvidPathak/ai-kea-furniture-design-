@@ -183,11 +183,11 @@ export function ManualDesignForm({ onDesignGenerated }) {
       )}
 
       {/* Optional Dimensions */}
-      <div className="border-t pt-4 mt-4">
-        <h3 className="text-sm font-medium text-neutral-700 mb-3">
+      <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4">
+        <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
           Custom Dimensions (optional)
         </h3>
-        <p className="text-xs text-neutral-500 mb-4">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
           Leave blank to use default dimensions for the selected furniture type
         </p>
 

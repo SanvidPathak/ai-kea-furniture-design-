@@ -92,25 +92,25 @@ export function OrderForm({ design, onSubmit, onCancel }) {
   return (
     <div className="space-y-6">
       {/* Order Summary */}
-      <div className="card bg-earth-beige/50">
-        <h3 className="text-lg font-semibold text-neutral-900 mb-3">Order Summary</h3>
+      <div className="card bg-earth-beige/50 dark:bg-neutral-800/50">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-3">Order Summary</h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-neutral-600">Item:</span>
-            <div className="font-medium capitalize">{design.furnitureType}</div>
+            <span className="text-neutral-600 dark:text-neutral-400">Item:</span>
+            <div className="font-medium capitalize text-neutral-900 dark:text-white">{design.furnitureType}</div>
           </div>
           <div>
-            <span className="text-neutral-600">Material:</span>
-            <div className="font-medium capitalize">{design.material}</div>
+            <span className="text-neutral-600 dark:text-neutral-400">Material:</span>
+            <div className="font-medium capitalize text-neutral-900 dark:text-white">{design.material}</div>
           </div>
           <div>
-            <span className="text-neutral-600">Dimensions:</span>
-            <div className="font-medium font-mono text-xs">
+            <span className="text-neutral-600 dark:text-neutral-400">Dimensions:</span>
+            <div className="font-medium font-mono text-xs text-neutral-900 dark:text-white">
               {design.dimensions.length} × {design.dimensions.width} × {design.dimensions.height} cm
             </div>
           </div>
           <div>
-            <span className="text-neutral-600">Total Cost:</span>
+            <span className="text-neutral-600 dark:text-neutral-400">Total Cost:</span>
             <div className="font-bold text-ikea-blue text-lg">
               ₹{design.totalCost.toFixed(2)}
             </div>
@@ -120,11 +120,11 @@ export function OrderForm({ design, onSubmit, onCancel }) {
 
       {/* Delivery Information Form */}
       <form onSubmit={handleSubmit} className="card space-y-4">
-        <h3 className="text-lg font-semibold text-neutral-900 mb-2">Delivery Information</h3>
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">Delivery Information</h3>
 
         {/* Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
             Full Name *
           </label>
           <input
@@ -133,9 +133,8 @@ export function OrderForm({ design, onSubmit, onCancel }) {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue ${
-              errors.name ? 'border-red-500' : 'border-neutral-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white ${errors.name ? 'border-red-500 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-700'
+              }`}
             placeholder="John Doe"
           />
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
@@ -144,7 +143,7 @@ export function OrderForm({ design, onSubmit, onCancel }) {
         {/* Email and Phone */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
               Email *
             </label>
             <input
@@ -153,16 +152,15 @@ export function OrderForm({ design, onSubmit, onCancel }) {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue ${
-                errors.email ? 'border-red-500' : 'border-neutral-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white ${errors.email ? 'border-red-500 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-700'
+                }`}
               placeholder="john@example.com"
             />
             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="phone" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
               Phone Number *
             </label>
             <input
@@ -171,9 +169,8 @@ export function OrderForm({ design, onSubmit, onCancel }) {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue ${
-                errors.phone ? 'border-red-500' : 'border-neutral-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white ${errors.phone ? 'border-red-500 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-700'
+                }`}
               placeholder="9876543210"
             />
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
@@ -182,7 +179,7 @@ export function OrderForm({ design, onSubmit, onCancel }) {
 
         {/* Address */}
         <div>
-          <label htmlFor="address" className="block text-sm font-medium text-neutral-700 mb-1">
+          <label htmlFor="address" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
             Delivery Address *
           </label>
           <textarea
@@ -191,9 +188,8 @@ export function OrderForm({ design, onSubmit, onCancel }) {
             value={formData.address}
             onChange={handleChange}
             rows={3}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue ${
-              errors.address ? 'border-red-500' : 'border-neutral-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white ${errors.address ? 'border-red-500 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-700'
+              }`}
             placeholder="Street address, apartment, suite, etc."
           />
           {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
@@ -202,7 +198,7 @@ export function OrderForm({ design, onSubmit, onCancel }) {
         {/* City, State, Pincode */}
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="city" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="city" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
               City *
             </label>
             <input
@@ -211,16 +207,15 @@ export function OrderForm({ design, onSubmit, onCancel }) {
               name="city"
               value={formData.city}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue ${
-                errors.city ? 'border-red-500' : 'border-neutral-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white ${errors.city ? 'border-red-500 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-700'
+                }`}
               placeholder="Mumbai"
             />
             {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
           </div>
 
           <div>
-            <label htmlFor="state" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="state" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
               State *
             </label>
             <input
@@ -229,16 +224,15 @@ export function OrderForm({ design, onSubmit, onCancel }) {
               name="state"
               value={formData.state}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue ${
-                errors.state ? 'border-red-500' : 'border-neutral-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white ${errors.state ? 'border-red-500 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-700'
+                }`}
               placeholder="Maharashtra"
             />
             {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
           </div>
 
           <div>
-            <label htmlFor="pincode" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="pincode" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
               Pincode *
             </label>
             <input
@@ -248,9 +242,8 @@ export function OrderForm({ design, onSubmit, onCancel }) {
               value={formData.pincode}
               onChange={handleChange}
               maxLength={6}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue ${
-                errors.pincode ? 'border-red-500' : 'border-neutral-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white ${errors.pincode ? 'border-red-500 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-700'
+                }`}
               placeholder="400001"
             />
             {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>}
@@ -259,7 +252,7 @@ export function OrderForm({ design, onSubmit, onCancel }) {
 
         {/* Notes */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-neutral-700 mb-1">
+          <label htmlFor="notes" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
             Special Instructions (Optional)
           </label>
           <textarea
@@ -268,13 +261,13 @@ export function OrderForm({ design, onSubmit, onCancel }) {
             value={formData.notes}
             onChange={handleChange}
             rows={2}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue"
+            className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-ikea-blue dark:bg-neutral-800 dark:text-white"
             placeholder="Any special instructions for delivery or assembly?"
           />
         </div>
 
         {/* Delivery Note */}
-        <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm text-blue-800 dark:text-blue-200">
           <strong>Estimated Delivery:</strong> 14 working days from order confirmation
         </div>
 

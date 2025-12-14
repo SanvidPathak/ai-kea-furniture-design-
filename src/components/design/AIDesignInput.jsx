@@ -104,7 +104,7 @@ export function AIDesignInput({ onDesignGenerated }) {
 
       {/* Text Input */}
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-2">
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           Describe Your Furniture
           <span className="text-red-500 ml-1">*</span>
         </label>
@@ -113,10 +113,10 @@ export function AIDesignInput({ onDesignGenerated }) {
           onChange={(e) => setUserInput(e.target.value)}
           placeholder="Example: I need a modern office desk in black metal, about 150cm wide, with drawers..."
           rows={4}
-          className="w-full px-4 py-3 border-2 border-neutral-300 rounded focus:border-primary-500 focus:outline-none transition-colors duration-200 resize-none"
+          className="w-full px-4 py-3 border-2 border-neutral-300 rounded focus:border-primary-500 focus:outline-none transition-colors duration-200 resize-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
           disabled={loading}
         />
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
           Be specific about type, material, size, style, and any special features
         </p>
       </div>
@@ -139,7 +139,7 @@ export function AIDesignInput({ onDesignGenerated }) {
                   key={index}
                   type="button"
                   onClick={() => handleExampleClick(example)}
-                  className="w-full text-left p-3 bg-earth-beige hover:bg-earth-sand rounded-lg text-sm text-neutral-700 transition-colors"
+                  className="w-full text-left p-3 bg-earth-beige dark:bg-neutral-800 hover:bg-earth-sand dark:hover:bg-neutral-700 rounded-lg text-sm text-neutral-700 dark:text-neutral-300 transition-colors"
                 >
                   <span className="text-ikea-blue mr-2">💡</span>
                   {example}
@@ -151,7 +151,7 @@ export function AIDesignInput({ onDesignGenerated }) {
       )}
 
       {/* Rate Limit Info */}
-      <div className="text-xs text-neutral-500 bg-neutral-50 p-3 rounded">
+      <div className="text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 p-3 rounded">
         <strong>Free Tier Limits:</strong> 10 requests/minute, 250 requests/day
       </div>
 
@@ -166,9 +166,9 @@ export function AIDesignInput({ onDesignGenerated }) {
       </Button>
 
       {/* Info */}
-      <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+      <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <span className="text-blue-600">ℹ️</span>
-        <p className="text-xs text-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
           AI will analyze your description and create a complete furniture design with parts, materials, dimensions, and assembly instructions.
           This typically takes 2-4 seconds.
         </p>

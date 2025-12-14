@@ -10,7 +10,7 @@ export function Select({
   return (
     <div className="mb-4">
       {label && (
-        <label className="block text-sm font-medium text-neutral-700 mb-2">
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>

@@ -1,3 +1,6 @@
+import { motion } from 'framer-motion';
+import { twMerge } from 'tailwind-merge';
+
 export function Button({
   children,
   variant = 'primary',
@@ -9,24 +12,27 @@ export function Button({
   ariaLabel,
   ...props
 }) {
-  const baseStyles = 'px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseStyles = 'px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-offset-2';
 
   const variants = {
-    primary: 'btn-ikea focus:ring-ikea-blue',
+    primary: 'btn-ikea focus:ring-ikea-blue shadow-lg hover:shadow-xl',
     secondary: 'btn-secondary focus:ring-neutral-400',
-    accent: 'btn-accent focus:ring-ikea-electric',
+    accent: 'btn-accent focus:ring-ikea-electric shadow-lg hover:shadow-xl',
   };
 
   const variantClass = variants[variant] || variants.primary;
 
   return (
-    <button
+    <motion.button
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`${baseStyles} ${variantClass} ${className}`}
+      className={twMerge(baseStyles, variantClass, className)}
       aria-label={ariaLabel}
       aria-busy={loading}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
       {...props}
     >
       {loading ? (
@@ -44,6 +50,6 @@ export function Button({
           Loading...
         </span>
       ) : children}
-    </button>
+    </motion.button>
   );
 }

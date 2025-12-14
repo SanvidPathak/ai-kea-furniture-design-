@@ -19,10 +19,10 @@ export function CostBreakdown({ parts, material, totalCost }) {
         <div className="flex items-center gap-3">
           <div className="text-2xl">💰</div>
           <div>
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-neutral-900">
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-neutral-900 dark:text-white">
               Cost Breakdown
             </h3>
-            <p className="text-xs sm:text-sm text-neutral-600">
+            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
               Detailed cost analysis by part
             </p>
           </div>
@@ -32,9 +32,8 @@ export function CostBreakdown({ parts, material, totalCost }) {
             ₹{totalCost.toFixed(2)}
           </span>
           <svg
-            className={`w-5 h-5 sm:w-6 sm:h-6 text-neutral-600 transition-transform ${
-              isExpanded ? 'rotate-180' : ''
-            }`}
+            className={`w-5 h-5 sm:w-6 sm:h-6 text-neutral-600 dark:text-neutral-400 transition-transform ${isExpanded ? 'rotate-180' : ''
+              }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -54,23 +53,23 @@ export function CostBreakdown({ parts, material, totalCost }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-neutral-200">
-                  <th className="text-left py-2 px-2 font-semibold text-neutral-700">
+                <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                  <th className="text-left py-2 px-2 font-semibold text-neutral-700 dark:text-neutral-300">
                     Part
                   </th>
-                  <th className="text-center py-2 px-2 font-semibold text-neutral-700">
+                  <th className="text-center py-2 px-2 font-semibold text-neutral-700 dark:text-neutral-300">
                     Qty
                   </th>
-                  <th className="text-right py-2 px-2 font-semibold text-neutral-700">
+                  <th className="text-right py-2 px-2 font-semibold text-neutral-700 dark:text-neutral-300">
                     Volume
                   </th>
-                  <th className="text-right py-2 px-2 font-semibold text-neutral-700">
+                  <th className="text-right py-2 px-2 font-semibold text-neutral-700 dark:text-neutral-300">
                     Unit Cost
                   </th>
-                  <th className="text-right py-2 px-2 font-semibold text-neutral-700">
+                  <th className="text-right py-2 px-2 font-semibold text-neutral-700 dark:text-neutral-300">
                     Total
                   </th>
-                  <th className="text-right py-2 px-2 font-semibold text-neutral-700">
+                  <th className="text-right py-2 px-2 font-semibold text-neutral-700 dark:text-neutral-300">
                     %
                   </th>
                 </tr>
@@ -79,28 +78,28 @@ export function CostBreakdown({ parts, material, totalCost }) {
                 {breakdown.map((part, index) => (
                   <tr
                     key={part.id || index}
-                    className="border-b border-neutral-100 hover:bg-earth-beige/30 transition-colors"
+                    className="border-b border-neutral-100 dark:border-neutral-800 hover:bg-earth-beige/30 dark:hover:bg-neutral-800 transition-colors"
                   >
                     <td className="py-3 px-2">
                       <div>
-                        <div className="font-medium text-neutral-900">
+                        <div className="font-medium text-neutral-900 dark:text-white">
                           {part.name}
                         </div>
-                        <div className="text-xs text-neutral-500 capitalize">
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
                           {part.type}
                         </div>
                       </div>
                     </td>
-                    <td className="text-center py-3 px-2 text-neutral-700">
+                    <td className="text-center py-3 px-2 text-neutral-700 dark:text-neutral-300">
                       {part.quantity}
                     </td>
-                    <td className="text-right py-3 px-2 text-neutral-700 font-mono text-xs">
+                    <td className="text-right py-3 px-2 text-neutral-700 dark:text-neutral-300 font-mono text-xs">
                       {part.volume.toLocaleString()} cm³
                     </td>
-                    <td className="text-right py-3 px-2 text-neutral-700">
+                    <td className="text-right py-3 px-2 text-neutral-700 dark:text-neutral-300">
                       ₹{part.unitCost.toFixed(2)}
                     </td>
-                    <td className="text-right py-3 px-2 font-semibold text-neutral-900">
+                    <td className="text-right py-3 px-2 font-semibold text-neutral-900 dark:text-white">
                       ₹{part.totalPartCost.toFixed(2)}
                     </td>
                     <td className="text-right py-3 px-2">
@@ -112,10 +111,10 @@ export function CostBreakdown({ parts, material, totalCost }) {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-neutral-300">
+                <tr className="border-t-2 border-neutral-300 dark:border-neutral-600">
                   <td
                     colSpan="4"
-                    className="py-3 px-2 text-right font-semibold text-neutral-900"
+                    className="py-3 px-2 text-right font-semibold text-neutral-900 dark:text-white"
                   >
                     Total Cost:
                   </td>
@@ -133,31 +132,31 @@ export function CostBreakdown({ parts, material, totalCost }) {
           </div>
 
           {/* Cost Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-neutral-200">
-            <div className="text-center p-3 bg-earth-beige rounded">
-              <div className="text-xs text-neutral-600 mb-1">Parts Types</div>
-              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="text-center p-3 bg-earth-beige dark:bg-neutral-800 rounded">
+              <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">Parts Types</div>
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900 dark:text-white">
                 {breakdown.length}
               </div>
             </div>
-            <div className="text-center p-3 bg-earth-beige rounded">
-              <div className="text-xs text-neutral-600 mb-1">Total Pieces</div>
-              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
+            <div className="text-center p-3 bg-earth-beige dark:bg-neutral-800 rounded">
+              <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">Total Pieces</div>
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900 dark:text-white">
                 {breakdown.reduce((sum, part) => sum + part.quantity, 0)}
               </div>
             </div>
-            <div className="text-center p-3 bg-earth-beige rounded">
-              <div className="text-xs text-neutral-600 mb-1">Total Volume</div>
-              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
+            <div className="text-center p-3 bg-earth-beige dark:bg-neutral-800 rounded">
+              <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">Total Volume</div>
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900 dark:text-white">
                 {breakdown
                   .reduce((sum, part) => sum + part.volume * part.quantity, 0)
                   .toLocaleString(undefined, { maximumFractionDigits: 0 })}{' '}
                 <span className="text-xs sm:text-sm">cm³</span>
               </div>
             </div>
-            <div className="text-center p-3 bg-earth-beige rounded">
-              <div className="text-xs text-neutral-600 mb-1">Avg Cost/Part</div>
-              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900">
+            <div className="text-center p-3 bg-earth-beige dark:bg-neutral-800 rounded">
+              <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">Avg Cost/Part</div>
+              <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-900 dark:text-white">
                 ₹
                 {(
                   totalCost /
