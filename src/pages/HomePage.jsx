@@ -110,6 +110,54 @@ export function HomePage() {
               </p>
             </GlassPanel>
           </motion.div>
+
+          {/* How It Works Section */}
+          <motion.div
+            variants={containerVariants}
+            className="mb-20"
+          >
+            <h3 className="text-3xl font-bold text-neutral-900 dark:text-white mb-12 text-center">
+              From Idea to Reality in <span className="text-ikea-blue">3 Simple Steps</span>
+            </h3>
+
+            <div className="grid md:grid-cols-3 gap-8 relative">
+              {/* Connector Line (Desktop) */}
+              <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-transparent via-ikea-blue/30 to-transparent z-0" />
+
+              {/* Step 1 */}
+              <div className="relative z-10 flex flex-col items-center text-center group">
+                <div className="w-24 h-24 bg-white dark:bg-neutral-800 rounded-full shadow-lg border-4 border-earth-beige dark:border-neutral-700 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-4xl">✨</span>
+                </div>
+                <h4 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">1. Dream It</h4>
+                <p className="text-neutral-600 dark:text-neutral-400 text-sm max-w-[250px]">
+                  Describe your ideal furniture in plain English or start with a template. AI generates the initial design instantly.
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="relative z-10 flex flex-col items-center text-center group">
+                <div className="w-24 h-24 bg-white dark:bg-neutral-800 rounded-full shadow-lg border-4 border-earth-beige dark:border-neutral-700 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-4xl">🎨</span>
+                </div>
+                <h4 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">2. Refine It</h4>
+                <p className="text-neutral-600 dark:text-neutral-400 text-sm max-w-[250px]">
+                  Customize dimensions, materials, and colors. Watch the price and parts list update in real-time.
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="relative z-10 flex flex-col items-center text-center group">
+                <div className="w-24 h-24 bg-white dark:bg-neutral-800 rounded-full shadow-lg border-4 border-earth-beige dark:border-neutral-700 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-4xl">🚀</span>
+                </div>
+                <h4 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">3. Build It</h4>
+                <p className="text-neutral-600 dark:text-neutral-400 text-sm max-w-[250px]">
+                  Place your order and receive a complete kit with all parts and step-by-step assembly instructions.
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
     </motion.div>
