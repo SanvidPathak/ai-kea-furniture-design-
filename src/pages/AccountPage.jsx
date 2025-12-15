@@ -306,8 +306,8 @@ export function AccountPage() {
               <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
                 Preferences
               </h3>
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
                   <h4 className="font-medium text-neutral-900 dark:text-white flex items-center gap-2">
                     Festive Mode <span className="text-xl">🎄</span>
                   </h4>
@@ -317,7 +317,7 @@ export function AccountPage() {
                 </div>
                 <button
                   onClick={toggleFestiveMode}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ikea-blue focus:ring-offset-2 ${isFestive ? 'bg-ikea-blue' : 'bg-neutral-200 dark:bg-neutral-700'
+                  className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ikea-blue focus:ring-offset-2 ${isFestive ? 'bg-ikea-blue' : 'bg-neutral-200 dark:bg-neutral-700'
                     }`}
                 >
                   <span
