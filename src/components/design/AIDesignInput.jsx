@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { isAIModeAvailable, getExamplePrompts } from '../../services/hybridDesignGenerator.js';
 import { Button } from '../common/Button.jsx';
 import { ErrorMessage } from '../common/ErrorMessage.jsx';
+import { useTheme } from '../../contexts/ThemeContext.jsx';
 
 export function AIDesignInput({ onDesignGenerated }) {
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showExamples, setShowExamples] = useState(true);
+  const { isFestive } = useTheme();
 
   const isAvailable = isAIModeAvailable();
   const examplePrompts = getExamplePrompts();
@@ -92,7 +94,7 @@ export function AIDesignInput({ onDesignGenerated }) {
 
       {/* AI Status Badge */}
       <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-ikea-blue to-ikea-electric rounded-lg text-white">
-        <span className="text-2xl">🤖</span>
+        <span className="text-2xl">{isFestive ? '🎅' : '🤖'}</span>
         <div className="flex-1">
           <h3 className="font-semibold">AI-Powered Design</h3>
           <p className="text-xs opacity-90">Describe your furniture in plain English</p>

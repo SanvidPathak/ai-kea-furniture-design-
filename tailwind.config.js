@@ -10,9 +10,9 @@ export default {
       colors: {
         // IKEA-inspired brand colors
         ikea: {
-          blue: '#0057AD',   // IKEA primary blue
-          yellow: '#FBDA0C', // IKEA bright yellow
-          electric: '#0077BE', // 2025 electric blue
+          blue: 'rgb(var(--color-ikea-blue) / <alpha-value>)',
+          yellow: 'rgb(var(--color-ikea-yellow) / <alpha-value>)',
+          electric: 'rgb(var(--color-ikea-electric) / <alpha-value>)',
         },
         // Primary palette - modern furniture e-commerce
         primary: {

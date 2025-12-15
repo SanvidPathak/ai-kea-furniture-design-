@@ -76,7 +76,7 @@ export function MyOrdersPage() {
     if (searchTerm) {
       filtered = filtered.filter(order =>
         order.designSnapshot?.furnitureType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customerInfo?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (order.customerInfo || order).name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.id?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -268,6 +268,8 @@ export function MyOrdersPage() {
               {filteredOrders.map((order) => {
                 const statusDisplay = getOrderStatusDisplay(order.status);
                 const design = order.designSnapshot;
+                // Handle legacy orders where customer info was saved at root
+                const customerInfo = order.customerInfo || order;
 
                 return (
                   <div key={order.id} className="card">
@@ -320,10 +322,10 @@ export function MyOrdersPage() {
                             Delivery Address
                           </h4>
                           <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                            {order.customerInfo.name}<br />
-                            {order.customerInfo.address}, {order.customerInfo.city}<br />
-                            {order.customerInfo.state} - {order.customerInfo.pincode}<br />
-                            {order.customerInfo.phone} | {order.customerInfo.email}
+                            {customerInfo.name}<br />
+                            {customerInfo.address}, {customerInfo.city}<br />
+                            {customerInfo.state} - {customerInfo.pincode}<br />
+                            {customerInfo.phone} | {customerInfo.email}
                           </p>
                         </div>
 

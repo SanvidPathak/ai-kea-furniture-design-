@@ -40,11 +40,57 @@ export function DesignPreview({ design }) {
     );
   }
 
-  // ... (keeping handleSave, etc., skipping matching lines where possible) but since I need to replace the return block below, I will likely match larger chunks or multiple replace calls. 
-  // Wait, I can't put comments in the middle of a string argument for replacementContent. 
-  // I will just perform two replace calls or one large one. One large one for the Component Render is easier.
+  const handleSave = async () => {
+    if (!user) {
+      showToast('Please sign in to save your design', 'error');
+      navigate('/login');
+      return;
+    }
 
-  /* ... */
+    setSaving(true);
+    try {
+      const designId = await saveDesign(user.uid, design);
+      setSavedDesignId(designId);
+      showToast('Design saved successfully!', 'success');
+    } catch (error) {
+      console.error('Save design error:', error);
+      setErrorMessage('Failed to save design. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreateOrder = () => {
+    if (!user) {
+      showToast('Please sign in to place an order', 'error');
+      navigate('/login');
+      return;
+    }
+    setShowOrderForm(true);
+  };
+
+  const handleOrderSubmit = async (orderData) => {
+    try {
+      const order = {
+        customerInfo: orderData,
+        designId: savedDesignId || design.id, // Use saved ID if available
+        designSnapshot: design, // Store copy of design at time of order
+        userId: user.uid,
+        status: 'pending',
+        createdAt: new Date(),
+        totalAmount: design.totalCost
+      };
+
+      await saveOrder(user.uid, order);
+      setShowOrderForm(false);
+      showToast('Order placed successfully!', 'success');
+      navigate('/orders');
+    } catch (error) {
+      console.error('Submit order error:', error);
+      showToast('Failed to place order. Please try again.', 'error');
+      throw error; // Let form handle loading state reset if needed
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -126,7 +172,7 @@ export function DesignPreview({ design }) {
 
       {/* Assembly Instructions */}
       <div className="card">
-        <h3 className="text-xl font-semibold text-neutral-900 mb-4">
+        <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
           Assembly Instructions
         </h3>
         <ol className="space-y-2">
@@ -135,7 +181,7 @@ export function DesignPreview({ design }) {
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-ikea-blue text-white text-sm font-semibold flex items-center justify-center">
                 {index + 1}
               </span>
-              <span className="text-neutral-700 pt-0.5">{instruction}</span>
+              <span className="text-neutral-700 dark:text-neutral-300 pt-0.5">{instruction}</span>
             </li>
           ))}
         </ol>
@@ -144,9 +190,9 @@ export function DesignPreview({ design }) {
       {/* Order Form Modal */}
       {showOrderForm && (
         <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-2xl w-full my-4 sm:my-8 max-h-[95vh] overflow-y-auto">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg max-w-2xl w-full my-4 sm:my-8 max-h-[95vh] overflow-y-auto">
             <div className="p-4 sm:p-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 mb-4">Place Your Order</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white mb-4">Place Your Order</h2>
               <OrderForm
                 design={design}
                 onSubmit={handleOrderSubmit}

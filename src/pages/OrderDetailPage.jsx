@@ -259,21 +259,21 @@ export function OrderDetailPage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <div className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Name</div>
-                  <div className="text-sm sm:text-base text-neutral-900 dark:text-white">{order.customerInfo.name}</div>
+                  <div className="text-sm sm:text-base text-neutral-900 dark:text-white">{(order.customerInfo || order).name}</div>
                 </div>
                 <div>
                   <div className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Phone</div>
-                  <div className="text-sm sm:text-base text-neutral-900 dark:text-white">{order.customerInfo.phone}</div>
+                  <div className="text-sm sm:text-base text-neutral-900 dark:text-white">{(order.customerInfo || order).phone}</div>
                 </div>
                 <div>
                   <div className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Email</div>
-                  <div className="text-sm sm:text-base text-neutral-900 dark:text-white">{order.customerInfo.email}</div>
+                  <div className="text-sm sm:text-base text-neutral-900 dark:text-white">{(order.customerInfo || order).email}</div>
                 </div>
                 <div>
                   <div className="text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Address</div>
                   <div className="text-sm sm:text-base text-neutral-900 dark:text-white">
-                    {order.customerInfo.address}, {order.customerInfo.city}<br />
-                    {order.customerInfo.state} - {order.customerInfo.pincode}
+                    {(order.customerInfo || order).address}, {(order.customerInfo || order).city}<br />
+                    {(order.customerInfo || order).state} - {(order.customerInfo || order).pincode}
                   </div>
                 </div>
               </div>

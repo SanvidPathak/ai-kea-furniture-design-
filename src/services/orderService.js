@@ -231,12 +231,12 @@ export async function deleteOrder(orderId, userId) {
  */
 export function getOrderStatusDisplay(status) {
   const statusMap = {
-    processing: { label: 'Processing', color: 'text-yellow-600 bg-yellow-50' },
-    confirmed: { label: 'Confirmed', color: 'text-blue-600 bg-blue-50' },
-    manufacturing: { label: 'Manufacturing', color: 'text-purple-600 bg-purple-50' },
-    shipped: { label: 'Shipped', color: 'text-indigo-600 bg-indigo-50' },
-    delivered: { label: 'Delivered', color: 'text-green-600 bg-green-50' },
-    cancelled: { label: 'Cancelled', color: 'text-red-600 bg-red-50' },
+    processing: { label: 'Processing', color: 'text-yellow-600 bg-yellow-50 dark:text-yellow-300 dark:bg-yellow-900/30' },
+    confirmed: { label: 'Confirmed', color: 'text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30' },
+    manufacturing: { label: 'Manufacturing', color: 'text-purple-600 bg-purple-50 dark:text-purple-300 dark:bg-purple-900/30' },
+    shipped: { label: 'Shipped', color: 'text-indigo-600 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-900/30' },
+    delivered: { label: 'Delivered', color: 'text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-900/30' },
+    cancelled: { label: 'Cancelled', color: 'text-red-600 bg-red-50 dark:text-red-300 dark:bg-red-900/30' },
   };
 
   return statusMap[status] || { label: status, color: 'text-neutral-600 bg-neutral-50' };

@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { useTheme } from '../contexts/ThemeContext.jsx';
 import { Button } from '../components/common/Button.jsx';
 import { GlassPanel } from '../components/common/GlassPanel.jsx';
 
 export function HomePage() {
   const { isAuthenticated } = useAuth();
+  const { isFestive } = useTheme();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -28,6 +30,7 @@ export function HomePage() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
+      className={isFestive ? "relative" : ""}
     >
       {/* Hero Section */}
       <section className="section-container px-4 pt-16 sm:pt-24 pb-12">
@@ -36,13 +39,19 @@ export function HomePage() {
             variants={itemVariants}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 dark:text-white mb-6 tracking-tight leading-tight"
           >
-            Design Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-ikea-blue to-ikea-electric">Perfect Furniture</span>
+            {isFestive ? (
+              <>Design the <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-green-600">Perfect Gift</span></>
+            ) : (
+              <>Design Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-ikea-blue to-ikea-electric">Perfect Furniture</span></>
+            )}
           </motion.h2>
           <motion.p
             variants={itemVariants}
             className="text-xl sm:text-2xl text-neutral-600 dark:text-neutral-300 mb-8 sm:mb-12 font-light"
           >
-            AI-powered modular furniture design platform where imagination meets engineering.
+            {isFestive
+              ? "Create personalized furniture gifts that your loved ones will cherish forever."
+              : "AI-powered modular furniture design platform where imagination meets engineering."}
           </motion.p>
           <motion.p
             variants={itemVariants}
@@ -58,7 +67,7 @@ export function HomePage() {
               <>
                 <Link to="/create" className="w-full sm:w-auto">
                   <Button className="w-full sm:w-auto text-lg px-8 py-4 shadow-xl shadow-ikea-blue/20">
-                    Start Designing →
+                    {isFestive ? "Start Gifting →" : "Start Designing →"}
                   </Button>
                 </Link>
                 <Link to="/designs" className="w-full sm:w-auto">
@@ -89,14 +98,18 @@ export function HomePage() {
             className="grid md:grid-cols-3 gap-6 mb-20"
           >
             <GlassPanel className="text-left hover:-translate-y-2 transition-transform duration-300">
-              <div className="text-5xl mb-6 bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center">🤖</div>
+              <div className={`text-5xl mb-6 ${isFestive ? 'bg-red-50' : 'bg-blue-50'} w-16 h-16 rounded-2xl flex items-center justify-center`}>
+                {isFestive ? '🎅' : '🤖'}
+              </div>
               <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">AI-Powered</h3>
               <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
                 Describe your furniture in plain English. Our advanced AI understands context, style, and engineering constraints.
               </p>
             </GlassPanel>
             <GlassPanel className="text-left hover:-translate-y-2 transition-transform duration-300">
-              <div className="text-5xl mb-6 bg-yellow-50 w-16 h-16 rounded-2xl flex items-center justify-center">🛠️</div>
+              <div className={`text-5xl mb-6 ${isFestive ? 'bg-green-50' : 'bg-yellow-50'} w-16 h-16 rounded-2xl flex items-center justify-center`}>
+                {isFestive ? '🍬' : '🛠️'}
+              </div>
               <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">Modular Design</h3>
               <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
                 Every piece breaks down into standard parts with clear, auto-generated assembly instructions.

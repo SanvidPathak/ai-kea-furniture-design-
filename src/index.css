@@ -5,6 +5,26 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Default IKEA Brand Colors (RGB channels for Tailwind opacity support) */
+  --color-ikea-blue: 0 87 173;
+  /* #0057AD */
+  --color-ikea-yellow: 251 218 12;
+  /* #FBDA0C */
+  --color-ikea-electric: 0 119 190;
+  /* #0077BE */
+}
+
+/* Festive Mode Overrides */
+.festive {
+  --color-ikea-blue: 214 0 28;
+  /* #D6001C Christmas Red */
+  --color-ikea-yellow: 0 95 75;
+  /* #005F4B Pine Green */
+  --color-ikea-electric: 255 215 0;
+  /* #FFD700 Gold */
+}
+
 /* Global Styles - IKEA-inspired clean and minimal */
 * {
   margin: 0;
@@ -80,7 +100,7 @@ body {
 
   /* Input style - clean and accessible */
   .input-field {
-    @apply w-full px-4 py-3 bg-white/80 border border-neutral-200 rounded-lg focus:border-ikea-blue focus:ring-2 focus:ring-ikea-blue/20 focus:outline-none transition-all duration-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:focus:ring-ikea-blue/40;
+    @apply w-full px-4 py-3 bg-white/80 border border-neutral-200 rounded-lg focus:border-ikea-blue focus:ring-2 focus:ring-ikea-blue focus:outline-none transition-all duration-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:focus:ring-ikea-blue;
   }
 
   /* Section container */

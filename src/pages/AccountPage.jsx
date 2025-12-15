@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
+import { useTheme } from '../contexts/ThemeContext.jsx';
 import {
   updateDisplayName,
   updatePassword,
@@ -18,6 +19,7 @@ import { ErrorMessage } from '../components/common/ErrorMessage.jsx';
 export function AccountPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { showToast } = useToast();
+  const { isFestive, toggleFestiveMode } = useTheme();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -296,6 +298,33 @@ export function AccountPage() {
                     Member since {formatDate(userProfile?.createdAt)}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Preferences */}
+            <div className="card">
+              <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
+                Preferences
+              </h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-neutral-900 dark:text-white flex items-center gap-2">
+                    Festive Mode <span className="text-xl">🎄</span>
+                  </h4>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    Enable snowfall animation and holiday themes
+                  </p>
+                </div>
+                <button
+                  onClick={toggleFestiveMode}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ikea-blue focus:ring-offset-2 ${isFestive ? 'bg-ikea-blue' : 'bg-neutral-200 dark:bg-neutral-700'
+                    }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isFestive ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                  />
+                </button>
               </div>
             </div>
 
