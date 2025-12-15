@@ -80,13 +80,13 @@ export function DesignCard({ design, onDelete }) {
               e.stopPropagation();
               navigate(`/designs/${design.id}`);
             }}
-            className="flex-1 px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-ikea-blue hover:bg-primary-50 rounded transition-colors"
+            className="flex-1 px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium bg-ikea-blue text-white hover:bg-primary-700 rounded transition-colors shadow-sm"
           >
             View Details
           </button>
           <button
             onClick={handleDelete}
-            className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
+            className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
           >
             Delete
           </button>

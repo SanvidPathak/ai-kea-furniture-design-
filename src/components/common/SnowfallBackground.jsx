@@ -20,24 +20,40 @@ export function SnowfallBackground() {
             initParticles();
         };
 
+        const mouseRef = { x: -1000, y: -1000 };
+
+        const handleMouseMove = (e) => {
+            mouseRef.x = e.clientX;
+            mouseRef.y = e.clientY;
+        };
+
+        const handleTouchMove = (e) => {
+            if (e.touches.length > 0) {
+                mouseRef.x = e.touches[0].clientX;
+                mouseRef.y = e.touches[0].clientY;
+            }
+        };
+
         const createParticle = () => {
             const colors = isDark
-                ? ['#D6001C', '#005F4B', '#0057AD', '#FFD700', '#FFFFFF'] // Red, Green, Blue, Gold, White
-                : ['#D6001C', '#005F4B', '#0057AD', '#EAB308', '#94A3B8']; // Similar for light mode (Gold -> Yellow-500)
+                ? ['#D6001C', '#005F4B', '#0057AD', '#FFD700', '#FFFFFF']
+                : ['#D6001C', '#005F4B', '#0057AD', '#EAB308', '#94A3B8'];
 
             return {
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                radius: Math.random() * 3 + 2, // 2-5px radius (larger)
+                radius: Math.random() * 3 + 2,
                 color: colors[Math.floor(Math.random() * colors.length)],
-                speedY: Math.random() * 1.5 + 0.8, // Faster
-                speedX: Math.random() * 1 - 0.5,
-                opacity: Math.random() * 0.4 + 0.6, // 0.6-1.0 opacity (brighter)
+                baseSpeedY: Math.random() * 1.5 + 0.8,
+                baseSpeedX: Math.random() * 1 - 0.5,
+                opacity: Math.random() * 0.4 + 0.6,
+                vx: 0,
+                vy: 0
             };
         };
 
         const initParticles = () => {
-            const particleCount = Math.floor((canvas.width * canvas.height) / 8000); // More dense
+            const particleCount = Math.floor((canvas.width * canvas.height) / 8000);
             particles = [];
             for (let i = 0; i < particleCount; i++) {
                 particles.push(createParticle());
@@ -49,19 +65,40 @@ export function SnowfallBackground() {
 
             particles.forEach(p => {
                 ctx.globalAlpha = p.opacity;
-                ctx.fillStyle = p.color; // Use particle's specific color
+                ctx.fillStyle = p.color;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                 ctx.fill();
 
+                // Interaction Physics
+                const dx = p.x - mouseRef.x;
+                const dy = p.y - mouseRef.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const interactionRadius = 150;
+
+                if (distance < interactionRadius) {
+                    const force = (interactionRadius - distance) / interactionRadius;
+                    const angle = Math.atan2(dy, dx);
+                    const pushStrength = 2; // Power of the push
+
+                    p.vx += Math.cos(angle) * force * pushStrength;
+                    p.vy += Math.sin(angle) * force * pushStrength;
+                }
+
+                // Apply physics
+                p.vx *= 0.95; // Friction
+                p.vy *= 0.95;
+
                 // Update position
-                p.y += p.speedY;
-                p.x += Math.sin(p.y * 0.01) * 0.5 + p.speedX; // Sway effect
+                p.y += p.baseSpeedY + p.vy;
+                p.x += Math.sin(p.y * 0.01) * 0.5 + p.baseSpeedX + p.vx;
 
                 // Reset loops
                 if (p.y > canvas.height) {
                     p.y = -10;
                     p.x = Math.random() * canvas.width;
+                    p.vx = 0;
+                    p.vy = 0;
                 }
                 if (p.x > canvas.width) {
                     p.x = 0;
@@ -74,11 +111,18 @@ export function SnowfallBackground() {
         };
 
         window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('touchmove', handleTouchMove);
+        window.addEventListener('touchstart', handleTouchMove);
+
         resizeCanvas();
         draw();
 
         return () => {
             window.removeEventListener('resize', resizeCanvas);
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchstart', handleTouchMove);
             cancelAnimationFrame(animationFrameId);
         };
     }, [theme]); // Re-run if theme changes to update colors
