@@ -89,12 +89,12 @@ body {
 
   /* Glassmorphism Card style */
   .card {
-    @apply bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:bg-neutral-800/70 dark:border-white/10;
+    @apply bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:bg-neutral-900/10 dark:border-white/10;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
 
   .glass-panel {
-    @apply bg-white/60 backdrop-blur-lg border border-white/30 dark:bg-neutral-900/60 dark:border-white/10;
+    @apply bg-white/10 backdrop-blur-sm border border-white/30 dark:bg-neutral-900/10 dark:border-white/10;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
 
