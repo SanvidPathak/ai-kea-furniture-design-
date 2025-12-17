@@ -48,7 +48,9 @@ export function AIDesignInput({ onDesignGenerated }) {
       // Handle specific error types
       let message = 'Failed to generate design with AI. Please try again.';
 
-      if (error.message?.includes('rate limit')) {
+      if (error.message?.includes('QUOTA_EXCEEDED')) {
+        message = error.message.replace('QUOTA_EXCEEDED: ', '');
+      } else if (error.message?.includes('rate limit')) {
         message = 'Rate limit exceeded. Please wait a moment and try again.';
       } else if (error.message?.includes('quota')) {
         message = 'Daily quota exceeded. Please try again tomorrow or use manual mode.';

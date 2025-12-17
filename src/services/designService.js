@@ -37,6 +37,28 @@ function convertTimestamps(data) {
 }
 
 /**
+ * Sanitize object for Firestore (remove undefined, fix NaNs)
+ */
+function sanitizeForFirestore(obj) {
+  if (obj === undefined) return null;
+  if (obj === null) return null;
+  if (typeof obj === 'number') return Number.isFinite(obj) ? obj : 0;
+  if (typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
+
+  // Handle dates if present (though usually Strings in designData)
+  if (obj instanceof Date) return obj.toISOString();
+
+  const newObj = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      newObj[key] = sanitizeForFirestore(obj[key]);
+    }
+  }
+  return newObj;
+}
+
+/**
  * Save a new design to Firestore
  * @param {string} userId - User ID who owns this design
  * @param {Object} designData - Design data from design generator
@@ -47,9 +69,12 @@ export async function saveDesign(userId, designData) {
     const db = getFirestoreInstance();
     const designsRef = collection(db, COLLECTION_NAME);
 
+    // Sanitize data to prevent "undefined" or invalid types
+    const sanitizedDesign = sanitizeForFirestore(designData);
+
     // Add userId, type, and timestamps to the design
     const designDoc = {
-      ...designData,
+      ...sanitizedDesign,
       userId,
       type: DOCUMENT_TYPE,
       createdAt: serverTimestamp(),

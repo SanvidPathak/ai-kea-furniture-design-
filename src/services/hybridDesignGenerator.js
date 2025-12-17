@@ -25,12 +25,31 @@ export async function generateFromNaturalLanguage(userInput) {
     // Step 1: Parse natural language with Gemini AI
     const aiParams = await parseNaturalLanguage(userInput);
 
+    // Heuristic Override: If used "partition" keyword but AI missed it, force 'random-shelves'.
+    if (userInput.toLowerCase().includes('partition') || userInput.toLowerCase().includes('divider')) {
+      if (!aiParams.partitionStrategy || aiParams.partitionStrategy === 'none') {
+        // If keywords like "middle", "center", "all", or "every" are present, implied intent is structured.
+        if (['middle', 'center', 'all', 'every'].some(k => userInput.toLowerCase().includes(k))) {
+          aiParams.partitionStrategy = 'all-shelves';
+        } else {
+          // Default to random for generic "partitions" request
+          aiParams.partitionStrategy = 'random-shelves';
+        }
+      }
+    }
+
     // Step 2: Generate design using existing deterministic algorithm
-    const design = generateDesign({
+    const design = await generateDesign({
       furnitureType: aiParams.furnitureType,
       material: aiParams.material,
       dimensions: aiParams.dimensions,
       materialColor: aiParams.materialColor,
+      projectedLoad: aiParams.projectedLoad, // Pass the load requirement
+      hasArmrests: aiParams.hasArmrests,
+      partitionStrategy: aiParams.partitionStrategy,
+      partitionRatio: aiParams.partitionRatio, // 60-40, 50-50, etc.
+      partitionCount: aiParams.partitionCount, // Number of partitions per shelf
+      shelfModifiers: aiParams.shelfModifiers || [], // Per-shelf overrides
     });
 
     // Step 3: Enhance with AI metadata
@@ -56,7 +75,9 @@ export async function generateFromNaturalLanguage(userInput) {
         'Please use manual input mode while waiting.'
       );
     } else {
-      throw new Error(`Natural language parsing failed: ${error.message}\nPlease try rephrasing or use manual input mode.`);
+      // DEBUG: Include stack trace to identify location of "reading length" error
+      console.error('Natural Language Generation Error:', error);
+      throw new Error(`parsing failed: ${error.message} \nPlease try rephrasing or use manual input mode.`);
     }
   }
 }
@@ -70,9 +91,9 @@ export async function generateFromNaturalLanguage(userInput) {
  * @param {string} params.material - Material type
  * @param {object} [params.dimensions] - Custom dimensions (optional)
  * @param {string} [params.materialColor] - Custom color (optional)
- * @returns {object} - Complete furniture design
+ * @returns {Promise<object>} - Complete furniture design
  */
-export function generateFromManualInput(params) {
+export async function generateFromManualInput(params) {
   try {
     // Validate params
     if (!params || typeof params !== 'object') {
@@ -88,7 +109,7 @@ export function generateFromManualInput(params) {
     }
 
     // Generate design using existing algorithm
-    const design = generateDesign(params);
+    const design = await generateDesign(params);
 
     // Add metadata
     return {
@@ -114,7 +135,7 @@ export async function generateDesignSmart(input) {
     return await generateFromNaturalLanguage(input);
   } else {
     // Manual mode
-    return generateFromManualInput(input);
+    return await generateFromManualInput(input);
   }
 }
 

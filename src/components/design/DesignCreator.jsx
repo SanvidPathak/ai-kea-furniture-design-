@@ -3,7 +3,7 @@ import { ManualDesignForm } from './ManualDesignForm.jsx';
 import { AIDesignInput } from './AIDesignInput.jsx';
 
 export function DesignCreator({ onDesignGenerated }) {
-  const [mode, setMode] = useState('manual'); // 'manual' or 'ai'
+  const [mode, setMode] = useState('ai'); // 'manual' or 'ai'
 
   return (
     <div className="space-y-4">
@@ -12,8 +12,8 @@ export function DesignCreator({ onDesignGenerated }) {
         <button
           onClick={() => setMode('manual')}
           className={`flex-1 px-4 py-2 rounded-md font-medium transition-all duration-200 ${mode === 'manual'
-              ? 'bg-white dark:bg-neutral-700 text-ikea-blue dark:text-white shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+            ? 'bg-white dark:bg-neutral-700 text-ikea-blue dark:text-white shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
             }`}
         >
           <span className="mr-2">📐</span>
@@ -22,8 +22,8 @@ export function DesignCreator({ onDesignGenerated }) {
         <button
           onClick={() => setMode('ai')}
           className={`flex-1 px-4 py-2 rounded-md font-medium transition-all duration-200 ${mode === 'ai'
-              ? 'bg-gradient-to-r from-ikea-blue to-ikea-electric text-white shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+            ? 'bg-gradient-to-r from-ikea-blue to-ikea-electric text-white shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
             }`}
         >
           <span className="mr-2">🤖</span>

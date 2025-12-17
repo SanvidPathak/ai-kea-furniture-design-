@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import { saveDesign } from '../../services/designService.js';
 import { saveOrder } from '../../services/orderService.js';
+import { ThreeJSViewer } from './ThreeJSViewer.jsx';
 import { DesignPartsTable } from './DesignPartsTable.jsx';
 import { CostBreakdown } from './CostBreakdown.jsx';
 import { OrderForm } from '../order/OrderForm.jsx';
@@ -11,6 +12,7 @@ import { Button } from '../common/Button.jsx';
 import { ErrorMessage } from '../common/ErrorMessage.jsx';
 
 export function DesignPreview({ design }) {
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -96,6 +98,11 @@ export function DesignPreview({ design }) {
     <div className="space-y-6">
       <ErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
 
+      {/* 3D Preview */}
+      {design.geometry3D && (
+        <ThreeJSViewer geometry3D={design.geometry3D} />
+      )}
+
       {/* Design Header */}
       <div className="card">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
@@ -157,9 +164,8 @@ export function DesignPreview({ design }) {
         </div>
       </div>
 
-      {/* Parts List */}
       <div className="card">
-        <h3 className="text-xl font-semibold text-neutral-900 mb-4">Parts List</h3>
+        <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">Parts List</h3>
         <DesignPartsTable parts={design.parts} />
       </div>
 

@@ -126,7 +126,7 @@ export function ManualDesignForm({ onDesignGenerated }) {
       }
 
       // Generate design
-      const design = generateDesign(params);
+      const design = await generateDesign(params);
 
       // Pass design to parent component
       onDesignGenerated(design);

@@ -44,16 +44,17 @@ export function SnowfallBackground() {
                 y: Math.random() * canvas.height,
                 radius: Math.random() * 3 + 2,
                 color: colors[Math.floor(Math.random() * colors.length)],
-                baseSpeedY: Math.random() * 1.5 + 0.8,
+                baseSpeedY: Math.random() * 1.2 + 0.6, // Reduced speed by 20%
                 baseSpeedX: Math.random() * 1 - 0.5,
-                opacity: Math.random() * 0.4 + 0.6,
+                opacity: Math.random() * 0.3 + 0.4, // Reduced contrast/opacity by 30%
                 vx: 0,
                 vy: 0
             };
         };
 
         const initParticles = () => {
-            const particleCount = Math.floor((canvas.width * canvas.height) / 8000);
+            // Reduced particle count by ~70% (increased divisor from 8000 to 25000)
+            const particleCount = Math.floor((canvas.width * canvas.height) / 25000);
             particles = [];
             for (let i = 0; i < particleCount; i++) {
                 particles.push(createParticle());

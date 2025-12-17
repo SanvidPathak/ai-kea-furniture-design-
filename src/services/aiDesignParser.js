@@ -47,6 +47,16 @@ const FURNITURE_DESIGN_SCHEMA = {
       description: 'Hex color code for the material (e.g., #8B4513 for wood brown)',
       pattern: '^#[0-9A-Fa-f]{6}$'
     },
+    projectedLoad: {
+      type: 'integer',
+      description: 'Maximum expected load/weight capacity in kg (default 100 for chairs, 50 for tables)',
+      minimum: 10,
+      maximum: 2000
+    },
+    hasArmrests: {
+      type: 'boolean',
+      description: 'Whether the furniture (specifically chairs) should have arm rests'
+    },
     styleNotes: {
       type: 'string',
       description: 'Brief description of design style, intended use, and special features'
@@ -55,65 +65,83 @@ const FURNITURE_DESIGN_SCHEMA = {
       type: 'string',
       enum: ['high', 'medium', 'low'],
       description: 'Confidence level in interpretation: high (clear request), medium (some assumptions), low (very ambiguous)'
+    },
+    partitionStrategy: {
+      type: 'string',
+      enum: ['none', 'all-shelves', 'random-shelves'],
+      description: 'Strategy for vertical partitions. Default to "none" unless explicitly requested. Use "all-shelves" or "random-shelves" only if user asks for partitions.'
+    },
+    partitionRatio: {
+      type: 'string',
+      description: 'Split ratio for partitions (e.g., "50-50", "30-70", "33-33-33"). Default is "50-50" (center).'
+    },
+    partitionCount: {
+      type: 'integer',
+      description: 'Number of vertical partitions per shelf. Default is 1.'
+    },
+    shelfModifiers: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          target: { type: 'string', description: 'Target shelf: "top", "bottom", "rest", or "0", "1", "2" (index)' },
+          count: { type: 'integer' },
+          ratio: { type: 'string' }
+        }
+      },
+      description: 'Specific rules for individual shelves. Overrides global settings.'
     }
   },
-  required: ['furnitureType', 'material', 'dimensions', 'materialColor', 'styleNotes', 'confidence']
+  required: ['furnitureType', 'material', 'dimensions', 'materialColor', 'styleNotes', 'confidence', 'projectedLoad', 'partitionStrategy']
 };
 
-// PTCF Framework System Prompt
+// PTCF Framework System Prompt (Optimized v2)
 const SYSTEM_PROMPT = `
-**Persona**: You are an expert furniture designer with 20 years of experience in modular furniture design and space planning. You understand ergonomics, material properties, and practical furniture dimensions.
-
-**Task**: Parse user furniture requests into structured design specifications. Extract the furniture type, material, dimensions, and style from natural language descriptions. Make intelligent inferences when information is missing.
+**Role**: Expert furniture designer.
+**Task**: JSON Parse user intent into design specs. Inferences allowed.
 
 **Context**:
+Types: table, chair, bookshelf, desk, bed frame.
+Materials: wood (#8B4513), metal (#2C2C2C), plastic (#FFFFFF).
 
-Available Furniture Types (choose exactly one):
-- table: Dining tables, coffee tables, side tables, work tables
-- chair: Dining chairs, office chairs, lounge chairs, stools
-- bookshelf: Open shelving units, bookcases, display shelves
-- desk: Work desks, computer desks, writing desks, standing desks
-- bed frame: Bed frames, platform beds, single/double/queen/king beds
+**Guidelines**:
+- Dining Table: 120-200Lx80-100W | Coffee: 90-120Lx50-70W
+- Desk: length 120-180, width 60-80.
+- Bookshelf: length 60-120, width 25-35, height 150-220.
+- Bed: Single 190x90, Double 190x140, Queen 200x150
+- "small" -> -20% size. "kids" -> -30% height.
+- Extract load/weight capacity if mentioned (e.g. "for 200kg" -> projectedLoad: 200)
 
-Available Materials (choose exactly one):
-- wood: Warm, classic, versatile. Colors: brown (#8B4513), oak (#D2691E), walnut (#5C4033)
-- metal: Modern, durable, industrial. Colors: silver (#C0C0C0), black (#2C2C2C), bronze (#CD7F32)
-- plastic: Affordable, lightweight, contemporary. Colors: white (#FFFFFF), gray (#CCCCCC), various colors
+**Instructions**:
+- Return ONLY valid JSON matching this exact structure.
+- **CRITICAL: Bookshelf Partitions**:
+  - If user implies partitions, set "partitionStrategy": "all-shelves" or "random-shelves".
+  - "partitionCount": Number of partitions per shelf (default 1).
+  - "partitionRatio": Global ratio (e.g. "50-50", "60-40").
+  - **"shelfModifiers"**: Use this for ANY specific shelf rules (top, bottom, middle, rest).
+    - Example: "Top shelf 2 partitions, rest 60-40" -> 
+      shelfModifiers: [{ "target": "top", "count": 2 }, { "target": "rest", "ratio": "60-40" }]
+    - "target": "top", "bottom", "rest", or index "0", "1"...
 
-Standard Dimension Guidelines:
-- Dining tables: 120-200cm length, 80-100cm width, 75cm height
-- Coffee tables: 90-120cm length, 50-70cm width, 40-50cm height
-- Dining chairs: 40-50cm width, 40-50cm depth, 85-95cm height
-- Office chairs: 50-60cm width, 50-60cm depth, 90-110cm height
-- Bookshelves: 60-120cm width, 25-35cm depth, 120-200cm height
-- Work desks: 120-180cm width, 60-80cm depth, 72-76cm height (standard)
-- Standing desks: 120-180cm width, 60-80cm depth, 100-120cm height (standing)
-- Bed frames: 190-210cm length (single: 90-100cm, double: 140cm, queen: 150cm, king: 180cm width), 30-50cm height
-
-Context-based Adjustments:
-- "small apartment" / "compact" → Reduce dimensions by 20-30%
-- "office" / "workplace" → Use standard ergonomic dimensions
-- "kids" / "children" → Reduce height by 25-30%, suggest plastic/wood
-- "single/twin bed" → 190cm x 90-100cm
-- "double/full bed" → 190cm x 140cm
-- "queen bed" → 200cm x 150cm
-- "king bed" → 200cm x 180cm
-- "luxury" / "premium" → Suggest wood
-- "budget" / "affordable" → Suggest plastic or basic wood
-- "outdoor" / "patio" → Suggest metal or plastic (weather-resistant)
-- "modern" / "contemporary" → Suggest metal
-- "traditional" / "classic" → Suggest wood
-
-**Format**: Return ONLY valid JSON matching the provided schema. Do NOT include explanations, markdown, or any text outside the JSON object. The response must be parseable by JSON.parse().
-
-**Quality Guidelines**:
-1. Be conservative with dimensions - prefer standard, practical sizes
-2. Choose materials that match the described style and use case
-3. Set confidence:
-   - "high": User specified type, material, or clear context
-   - "medium": Had to infer 1-2 key details
-   - "low": Very ambiguous, made multiple assumptions
-4. In styleNotes, briefly mention any special considerations or assumptions made
+JSON Example:
+{
+  "furnitureType": "table",
+  "material": "wood",
+  "materialColor": "#8B4513",
+  "dimensions": { "length": 120, "width": 60, "height": 75 },
+  "styleNotes": "Modern style",
+  "confidence": "high",
+  "projectedLoad": 50,
+  "hasArmrests": false,
+  "partitionStrategy": "all-shelves",
+  "partitionRatio": "60-40",
+  "partitionCount": 1,
+  "shelfModifiers": [
+     { "target": "top", "count": 2, "ratio": "33-33-33" },
+     { "target": "bottom", "count": 0 },
+     { "target": "rest", "ratio": "60-40" }
+  ]
+}
 `;
 
 /**
@@ -171,14 +199,14 @@ export async function parseNaturalLanguage(userInput) {
 
     // Validate dimensions
     const { dimensions } = result;
-    if (!dimensions.length || !dimensions.width || !dimensions.height) {
+    if (!dimensions || !dimensions.length || !dimensions.width || !dimensions.height) {
       throw new Error('AI response missing complete dimensions');
     }
 
     // Ensure dimensions are reasonable (sanity check)
     if (dimensions.length < 10 || dimensions.length > 500 ||
-        dimensions.width < 10 || dimensions.width > 500 ||
-        dimensions.height < 10 || dimensions.height > 500) {
+      dimensions.width < 10 || dimensions.width > 500 ||
+      dimensions.height < 10 || dimensions.height > 500) {
       throw new Error('AI suggested unrealistic dimensions - please provide more specific measurements');
     }
 
@@ -192,6 +220,12 @@ export async function parseNaturalLanguage(userInput) {
         height: result.dimensions.height,
       },
       materialColor: result.materialColor,
+      projectedLoad: result.projectedLoad,
+      hasArmrests: result.hasArmrests,
+      partitionStrategy: result.partitionStrategy,
+      partitionRatio: result.partitionRatio,
+      partitionCount: result.partitionCount,
+      shelfModifiers: result.shelfModifiers,
       // Store AI metadata for display
       _aiMetadata: {
         styleNotes: result.styleNotes,

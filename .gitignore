@@ -26,6 +26,7 @@ test-frontend.js
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+debug-gemini.js
 
 # Logs
 logs
@@ -67,9 +68,9 @@ FIREBASE_SETUP_GUIDE.md
 GEMINI_INTEGRATION_COMPLETE.md
 DEPLOY_GUIDE.md
 PHASES.md
-ALGORITHM_PLAN.md
+#ALGORITHM_PLAN.md
 DEPLOYMENT.md
-PROJECT_HANDOVER.md
+
 docs/
 
 # Deployment scripts (local only)
@@ -82,6 +83,7 @@ test-backend.js
 test-gemini-connection.js
 test-simple-write.js
 debug-firebase.js
+test-phase3.js
 
 PROJECT_TIMELINE.csv
 

@@ -1,7 +1,16 @@
-/**
- * Design Generator - Pure client-side furniture design algorithm
- * Generates modular furniture designs with parts, cost, and assembly instructions
- */
+import {
+  calculateLoadRequirements,
+  calculateLegDimensions,
+  calculateDeflection,
+  calculateStability,
+  determineStructuralAdditions,
+  calculateIntegrityScore,
+  validateAssemblyFeasibility,
+  estimateWorkforce,
+  applyAnchorPoints,
+  generateEngineeringSpecs
+} from '../utils/furnitureEngineering.js';
+import { generateThreeJSGeometry } from '../utils/geometryGenerator.js';
 
 // Material properties: density (g/cm³) and cost per cm³ in INR
 // Updated rates based on 2025 Indian market prices
@@ -21,18 +30,18 @@ const DEFAULT_DIMENSIONS = {
 };
 
 /**
- * Generate parts for table
+ * Generate parts for table with engineering specs
  */
-function generateTableParts(dimensions, material, color) {
+function generateTableParts(dimensions, material, color, engineeringSpecs) {
   const { length, width, height } = dimensions;
-  const thickness = 3;
+  const { legSize, topThickness } = engineeringSpecs;
 
-  return [
+  const parts = [
     {
       id: 'table-top',
       name: 'Table Top',
       type: 'surface',
-      dimensions: { length, width, height: thickness },
+      dimensions: { length, width, height: topThickness },
       quantity: 1,
       material,
       color,
@@ -41,23 +50,68 @@ function generateTableParts(dimensions, material, color) {
       id: 'table-leg',
       name: 'Table Leg',
       type: 'support',
-      dimensions: { length: 5, width: 5, height: height - thickness },
+      dimensions: { length: legSize, width: legSize, height: height - topThickness },
       quantity: 4,
       material,
       color,
     },
   ];
+
+  // Add structural additions if any
+  if (engineeringSpecs.additions) {
+    engineeringSpecs.additions.forEach((add, idx) => {
+      if (add.type === 'center-support') {
+        parts.push({
+          id: `center-leg-${idx}`,
+          name: 'Center Support Leg',
+          type: 'support',
+          dimensions: { length: legSize, width: legSize, height: height - topThickness },
+          quantity: add.quantity,
+          material,
+          color
+        });
+      }
+      if (add.type === 'apron') {
+        // Aprons fit BETWEEN the legs
+        // Long Apron: Runs along Length. Size = Length - 2*LegSize.
+        parts.push({
+          id: `apron-long-${idx}`,
+          name: 'Apron (Long)',
+          type: 'support',
+          dimensions: { length: length - (2 * legSize), width: add.dimensions.thickness, height: add.dimensions.height },
+          quantity: 2,
+          anchorPattern: 'apron',
+          material,
+          color
+        });
+        // Short Apron: Runs along Width. Size = Width - 2*LegSize.
+        parts.push({
+          id: `apron-short-${idx}`,
+          name: 'Apron (Short)',
+          type: 'support',
+          dimensions: { length: width - (2 * legSize), width: add.dimensions.thickness, height: add.dimensions.height },
+          quantity: 2,
+          anchorPattern: 'apron',
+          material,
+          color
+        });
+      }
+    });
+  }
+
+  return parts;
 }
 
 /**
  * Generate parts for chair
  */
-function generateChairParts(dimensions, material, color) {
+function generateChairParts(dimensions, material, color, engineeringSpecs) {
   const { length, width, height } = dimensions;
-  const thickness = 2;
+  const thickness = engineeringSpecs.topThickness || 2;
   const seatHeight = height * 0.5;
+  const { legSize } = engineeringSpecs;
 
-  return [
+  const parts = [
     {
       id: 'chair-seat',
       name: 'Seat',
@@ -80,29 +134,63 @@ function generateChairParts(dimensions, material, color) {
       id: 'chair-leg',
       name: 'Chair Leg',
       type: 'support',
-      dimensions: { length: 4, width: 4, height: seatHeight },
+      dimensions: { length: legSize, width: legSize, height: seatHeight },
       quantity: 4,
+      anchorPattern: 'corners',
       material,
       color,
     },
   ];
+
+  if (engineeringSpecs.hasArmrests) {
+    // 1. Horizontal Top Bar
+    parts.push({
+      id: 'chair-armrest-top',
+      name: 'Arm Rest Top', // Changed name to distinguish
+      type: 'support',
+      // Thin X, Long Z, Thin Y
+      dimensions: { length: 5, width: width - thickness, height: 3 },
+      quantity: 2,
+      material,
+      color
+    });
+
+    // 2. Vertical Front Support Post
+    parts.push({
+      id: 'chair-armrest-support',
+      name: 'Arm Support',
+      type: 'support',
+      // Square post, thickness matches top bar (5)
+      dimensions: { length: 5, width: 5, height: 22 },
+      quantity: 2,
+      material,
+      color
+    });
+  }
+
+  return parts;
 }
 
 /**
  * Generate parts for bookshelf
  */
-function generateBookshelfParts(dimensions, material, color) {
+function generateBookshelfParts(dimensions, material, color, engineeringSpecs) {
   const { length, width, height } = dimensions;
   const thickness = 2;
-  const shelves = 5;
+  // If user asks for "5 shelves", we assume they mean 5 internal adjustable shelves.
+  // We do NOT subtract 1 for the bottom/top.
+  const totalShelves = engineeringSpecs.shelves || 5;
+  const internalShelves = totalShelves;
 
-  return [
+  const parts = [
     {
       id: 'bookshelf-side',
       name: 'Side Panel',
       type: 'surface',
-      dimensions: { length: width, width: thickness, height },
+      // Swap: Length is Thickness (X), Width is Depth (Z)
+      dimensions: { length: thickness, width: width, height },
       quantity: 2,
+      anchorPattern: 'sides',
       material,
       color,
     },
@@ -111,7 +199,8 @@ function generateBookshelfParts(dimensions, material, color) {
       name: 'Shelf',
       type: 'surface',
       dimensions: { length, width, height: thickness },
-      quantity: shelves,
+      quantity: internalShelves,
+      anchorPattern: 'distribute-y',
       material,
       color,
     },
@@ -121,25 +210,83 @@ function generateBookshelfParts(dimensions, material, color) {
       type: 'surface',
       dimensions: { length, width: thickness, height },
       quantity: 1,
+      // handled by generic 'back panel' logic
+      material,
+      color,
+    },
+    {
+      id: 'bookshelf-top',
+      name: 'Top Panel',
+      type: 'surface',
+      dimensions: { length, width, height: thickness },
+      quantity: 1,
+      material,
+      color,
+    },
+    {
+      id: 'bookshelf-bottom',
+      name: 'Bottom Panel',
+      type: 'surface',
+      // Thicker base to raise off ground
+      dimensions: { length, width, height: 10 },
+      quantity: 1,
       material,
       color,
     },
   ];
+
+  // Vertical Partitions
+  if (['all-shelves', 'random-shelves'].includes(engineeringSpecs.partitionStrategy)) {
+    // Determine quantity based on shelves. At least 1 per shelf interval.
+    // We have `internalShelves` intervals + top gap = totalShelves intervals.
+    // Let's say we want 1 partition per shelf level.
+    parts.push({
+      id: 'bookshelf-partition',
+      name: 'Vertical Partition',
+      type: 'support',
+      // Height will be auto-calculated by engineering (fits gap)
+      // Length is thickness (X). Width is Depth (Z).
+      dimensions: { length: thickness, width: width, height: 30 },
+      quantity: internalShelves + 1, // One for each gap (Bottom->Shelf1... ShelfN->Top)
+      anchorPattern: 'vertical-partition',
+      material,
+      color,
+      anchorPattern: 'vertical-partition',
+      material,
+      color,
+      meta: {
+        strategy: engineeringSpecs.partitionStrategy,
+        ratio: engineeringSpecs.partitionRatio, // Pass 60-40, 0.6, etc.
+        count: engineeringSpecs.partitionCount, // Pass explicit count if available
+        modifiers: engineeringSpecs.shelfModifiers // Pass per-shelf rules
+      }
+    });
+  }
+
+  if (engineeringSpecs.additions) {
+    engineeringSpecs.additions.forEach(add => {
+      if (add.type === 'anti-tip-bracket') {
+        // Logical part
+      }
+    });
+  }
+
+  return parts;
 }
 
 /**
  * Generate parts for desk
  */
-function generateDeskParts(dimensions, material, color) {
+function generateDeskParts(dimensions, material, color, engineeringSpecs) {
   const { length, width, height } = dimensions;
-  const thickness = 3;
+  const { legSize, topThickness } = engineeringSpecs;
 
   return [
     {
       id: 'desk-top',
       name: 'Desk Top',
       type: 'surface',
-      dimensions: { length, width, height: thickness },
+      dimensions: { length, width, height: topThickness },
       quantity: 1,
       material,
       color,
@@ -157,8 +304,9 @@ function generateDeskParts(dimensions, material, color) {
       id: 'desk-leg',
       name: 'Desk Leg',
       type: 'support',
-      dimensions: { length: 5, width: 5, height: height - thickness },
+      dimensions: { length: legSize, width: legSize, height: height - topThickness },
       quantity: 4,
+      anchorPattern: 'corners',
       material,
       color,
     },
@@ -168,11 +316,13 @@ function generateDeskParts(dimensions, material, color) {
 /**
  * Generate parts for bed frame
  */
-function generateBedFrameParts(dimensions, material, color) {
+function generateBedFrameParts(dimensions, material, color, engineeringSpecs) {
   const { length, width, height } = dimensions;
   const thickness = 3;
+  const { legSize } = engineeringSpecs;
 
-  return [
+
+  const parts = [
     {
       id: 'bedframe-headboard',
       name: 'Headboard',
@@ -195,8 +345,10 @@ function generateBedFrameParts(dimensions, material, color) {
       id: 'bedframe-side-rail',
       name: 'Side Rail',
       type: 'support',
-      dimensions: { length, width: 10, height: thickness },
+      // Swap: Length is Thickness (X), Width is Length (Z)
+      dimensions: { length: thickness, width: length, height: 10 },
       quantity: 2,
+      anchorPattern: 'sides',
       material,
       color,
     },
@@ -206,6 +358,7 @@ function generateBedFrameParts(dimensions, material, color) {
       type: 'support',
       dimensions: { length: width - 20, width: 8, height: thickness },
       quantity: 10,
+      anchorPattern: 'distribute-z',
       material,
       color,
     },
@@ -213,12 +366,29 @@ function generateBedFrameParts(dimensions, material, color) {
       id: 'bedframe-leg',
       name: 'Bed Leg',
       type: 'support',
-      dimensions: { length: 8, width: 8, height: height },
+      dimensions: { length: legSize, width: legSize, height: height },
       quantity: 4,
       material,
       color,
     },
   ];
+
+  if (engineeringSpecs.additions) {
+    engineeringSpecs.additions.forEach(add => {
+      if (add.type === 'center-beam') {
+        parts.push({
+          id: 'bedframe-center',
+          name: 'Center Beam',
+          type: 'support',
+          dimensions: { length, width: 8, height: thickness },
+          quantity: 1,
+          material,
+          color
+        });
+      }
+    });
+  }
+  return parts;
 }
 
 /**
@@ -232,7 +402,7 @@ function calculateVolume(dimensions) {
  * Calculate cost of parts
  */
 export function calculateTotalCost(parts, material) {
-  const materialProps = MATERIALS[material];
+  const materialProps = MATERIALS[material] || MATERIALS.wood; // Fallback
   let totalCost = 0;
 
   parts.forEach(part => {
@@ -251,7 +421,7 @@ export function calculateTotalCost(parts, material) {
  * @returns {Array} Array of parts with cost details
  */
 export function calculateCostBreakdown(parts, material) {
-  const materialProps = MATERIALS[material];
+  const materialProps = MATERIALS[material] || MATERIALS.wood;
   const totalCost = calculateTotalCost(parts, material);
 
   return parts.map(part => {
@@ -273,8 +443,8 @@ export function calculateCostBreakdown(parts, material) {
 /**
  * Generate assembly instructions
  */
-function generateInstructions(furnitureType, parts) {
-  const instructions = {
+function generateInstructions(furnitureType, structuralReport, workforce) {
+  const baseInstructions = {
     table: [
       'Attach the four table legs to the corners of the table top',
       'Ensure legs are perpendicular to the surface',
@@ -308,7 +478,21 @@ function generateInstructions(furnitureType, parts) {
     ],
   };
 
-  return instructions[furnitureType] || [];
+  const instructions = [...(baseInstructions[furnitureType] || [])];
+
+  // Inject Structural Recommendations
+  if (structuralReport && structuralReport.recommendations) {
+    structuralReport.recommendations.forEach(rec => {
+      instructions.push(`NOTE: ${rec}`);
+    });
+  }
+
+  // Inject Workforce Warning
+  if (workforce && workforce.requiresTwoPeople) {
+    instructions.unshift(`⚠️ ${workforce.reason} (Estimated Weight/Size)`);
+  }
+
+  return instructions;
 }
 
 /**
@@ -324,7 +508,7 @@ function calculateAssemblyTime(furnitureType, parts) {
   };
 
   const partsComplexity = parts.reduce((total, part) => total + part.quantity, 0);
-  return baseTime[furnitureType] + Math.floor(partsComplexity * 2);
+  return (baseTime[furnitureType] || 30) + Math.floor(partsComplexity * 2);
 }
 
 /**
@@ -336,8 +520,8 @@ function calculateAssemblyTime(furnitureType, parts) {
  * @param {string} [config.materialColor] - Custom color (optional)
  * @returns {Object} Complete design with parts, cost, and instructions
  */
-export function generateDesign(config) {
-  const { furnitureType, material, dimensions, materialColor } = config;
+export async function generateDesign(config) {
+  const { furnitureType, material, dimensions, materialColor, hasArmrests } = config;
 
   // Validate inputs
   if (!furnitureType || !DEFAULT_DIMENSIONS[furnitureType]) {
@@ -351,41 +535,108 @@ export function generateDesign(config) {
   // Use default dimensions if not provided
   const finalDimensions = dimensions || DEFAULT_DIMENSIONS[furnitureType];
 
+  if (!finalDimensions) {
+    throw new Error(`Could not determine dimensions for furniture type: ${furnitureType}`);
+  }
+
   // Use material's default color if not provided
   const color = materialColor || MATERIALS[material].defaultColor;
 
-  // Generate parts based on furniture type
+  // --- ENGINEERING PHASE ---
+  // Unified Engineering Pipeline
+  // Unified Engineering Pipeline
+  const specs = await generateEngineeringSpecs({
+    furnitureType,
+    dimensions: finalDimensions,
+    material,
+    projectedLoad: config.projectedLoad, // Pass the parsed load to engineering
+    shelves: config.shelves, // Custom shelf count
+    partitionStrategy: config.partitionStrategy, // Partition strategy (none, all, random)
+    partitionRatio: config.partitionRatio, // Partition ratio (60-40, etc.)
+    partitionCount: config.partitionCount, // Number of partitions per shelf
+    shelfModifiers: config.shelfModifiers || [], // Per-shelf overrides
+  });
+
+  const { legSize, topThickness, additions, loadAnalysis } = specs;
+
+  // Extract for validation phase
+  const distributedLoad = loadAnalysis.expectedLoad?.distributed || 50;
+
+  const engineeringSpecs = {
+    legSize,
+    topThickness,
+    additions,
+    hasArmrests, // Pass this flag to part generators
+    shelves: specs.shelves, // Pass shelves count
+    partitionStrategy: specs.partitionStrategy, // Pass partition strategy
+    partitionRatio: specs.partitionRatio, // Pass partition ratio
+    partitionCount: specs.partitionCount, // Pass partition count
+    shelfModifiers: specs.shelfModifiers // Pass modifiers
+  };
+
+  // Generate parts based on furniture type + engineering specs
   let parts;
   switch (furnitureType) {
     case 'table':
-      parts = generateTableParts(finalDimensions, material, color);
+      parts = generateTableParts(finalDimensions, material, color, engineeringSpecs);
       break;
     case 'chair':
-      parts = generateChairParts(finalDimensions, material, color);
+      parts = generateChairParts(finalDimensions, material, color, engineeringSpecs);
       break;
     case 'bookshelf':
-      parts = generateBookshelfParts(finalDimensions, material, color);
+      parts = generateBookshelfParts(finalDimensions, material, color, engineeringSpecs);
       break;
     case 'desk':
-      parts = generateDeskParts(finalDimensions, material, color);
+      parts = generateDeskParts(finalDimensions, material, color, engineeringSpecs);
       break;
     case 'bed frame':
-      parts = generateBedFrameParts(finalDimensions, material, color);
+      parts = generateBedFrameParts(finalDimensions, material, color, engineeringSpecs);
       break;
     default:
       throw new Error(`Unsupported furniture type: ${furnitureType}`);
   }
 
+  // --- VALIDATION PHASE ---
+  // 5. Stability
+  const cogHeight = finalDimensions.height * 0.6; // heuristic
+  const stabilityAnalysis = calculateStability(finalDimensions, cogHeight);
+
+  // 6. Assembly Feasibility
+  const assemblyFeasibility = validateAssemblyFeasibility(parts);
+
+  // 7. Workforce
+  const workforce = estimateWorkforce(parts, finalDimensions);
+
+  // 8. Integrity Score
+  // Recalculate deflection for report if needed
+  const deflectionAnalysis = calculateDeflection(finalDimensions.length, finalDimensions.width, topThickness, material, distributedLoad);
+
+  const integrityScore = calculateIntegrityScore(loadAnalysis, deflectionAnalysis, stabilityAnalysis, additions, assemblyFeasibility);
+
+  const structuralReport = {
+    loadCapacity: `${loadAnalysis.expectedLoad.distributed}kg`,
+    selfWeight: `${loadAnalysis.selfWeight}kg`,
+    integrityScore,
+    isStable: stabilityAnalysis.isStable,
+    warnings: [
+      ...assemblyFeasibility.warnings,
+      ...(stabilityAnalysis.sizeWarning ? [stabilityAnalysis.sizeWarning] : []),
+      ...(stabilityAnalysis.recommendation ? [stabilityAnalysis.recommendation] : [])
+    ],
+    recommendations: stabilityAnalysis.recommendation ? [stabilityAnalysis.recommendation] : []
+  };
+
+
   // Calculate total cost
   const totalCost = calculateTotalCost(parts, material);
 
   // Generate assembly instructions
-  const instructions = generateInstructions(furnitureType, parts);
+  const instructions = generateInstructions(furnitureType, structuralReport, workforce);
 
   // Calculate assembly time
   const assemblyTime = calculateAssemblyTime(furnitureType, parts);
 
-  return {
+  const design = {
     furnitureType,
     material,
     materialColor: color,
@@ -394,5 +645,21 @@ export function generateDesign(config) {
     totalCost,
     instructions,
     assemblyTime,
+    structural: structuralReport // Attach engineering data
+  };
+
+  // --- 3D GENERATION PHASE ---
+  // Apply Engineering Anchors to calculate explicit positions
+  // This "explodes" parts (Leg x4 becomes Leg-1, Leg-2...) and sets precise x/y/z
+  const positionedParts = applyAnchorPoints(parts, furnitureType, finalDimensions);
+
+  const geometry3D = generateThreeJSGeometry({
+    ...design,
+    parts: positionedParts // Use the exploded, positioned parts for 3D
+  });
+
+  return {
+    ...design,
+    geometry3D
   };
 }
