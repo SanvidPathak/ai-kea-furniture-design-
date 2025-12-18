@@ -35,15 +35,23 @@ export function SnowfallBackground() {
         };
 
         const createParticle = () => {
-            const colors = isDark
-                ? ['#D6001C', '#005F4B', '#0057AD', '#FFD700', '#FFFFFF']
-                : ['#D6001C', '#005F4B', '#0057AD', '#EAB308', '#94A3B8'];
+            // Refined Palette (Dec 2025): 90% Snow, 10% Confetti
+            const confettiColors = isDark
+                ? ['#D6001C', '#005F4B', '#0057AD', '#FFD700']  // Vibrant Dark
+                : ['#D6001C', '#005F4B', '#0057AD', '#EAB308']; // Vibrant Light
+
+            const snowColor = isDark ? '#F1F5F9' : '#94A3B8'; // Soft White vs Cool Silver
+
+            const isConfetti = Math.random() > 0.90; // 10% chance
+            const color = isConfetti
+                ? confettiColors[Math.floor(Math.random() * confettiColors.length)]
+                : snowColor;
 
             return {
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
                 radius: Math.random() * 3 + 2,
-                color: colors[Math.floor(Math.random() * colors.length)],
+                color: color,
                 baseSpeedY: Math.random() * 1.2 + 0.6, // Reduced speed by 20%
                 baseSpeedX: Math.random() * 1 - 0.5,
                 opacity: Math.random() * 0.3 + 0.4, // Reduced contrast/opacity by 30%
