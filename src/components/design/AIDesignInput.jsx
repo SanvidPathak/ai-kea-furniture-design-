@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { isAIModeAvailable, getExamplePrompts } from '../../services/hybridDesignGenerator.js';
+import { isAIModeAvailable, getExamplePrompts, generateFromNaturalLanguage } from '../../services/hybridDesignGenerator.js';
 import { Button } from '../common/Button.jsx';
 import { ErrorMessage } from '../common/ErrorMessage.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
@@ -31,9 +31,6 @@ export function AIDesignInput({ onDesignGenerated }) {
     setLoading(true);
 
     try {
-      // Import the hybrid generator
-      const { generateFromNaturalLanguage } = await import('../../services/hybridDesignGenerator.js');
-
       // Generate design from natural language
       const design = await generateFromNaturalLanguage(userInput.trim());
 
