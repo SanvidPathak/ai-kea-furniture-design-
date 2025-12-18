@@ -229,6 +229,7 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
 
     // Clone parts to avoid side-effects
     const positionedParts = parts.map(p => ({ ...p }));
+    const warnings = []; // Collect engineering warnings
 
     // --- 1. ASSIGN ANCHOR PATTERNS ---
     positionedParts.forEach(part => {
@@ -427,151 +428,194 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
             if (top) yLevels.push(top.position.y - (safeNum(top.dimensions.height) / 2));
             else yLevels.push(safeNum(dimensions.height)); // Fallback top
 
-            // Add Shelves (Center Y) -> Convert to Top/Bottom faces?
-            // Shelves are thin (2cm). Let's assume we stack ON TOP of them?
-            // Actually, we want partitions BETWEEN them.
-            // Shelf Y is center. Face is Y +/- Th/2.
-            const shelves = explodedParts.filter(p => p.name.includes('Shelf'));
-            shelves.forEach(s => {
-                const th = safeNum(s.dimensions.height);
-                yLevels.push(s.position.y - (th / 2)); // Bottom Face
-                yLevels.push(s.position.y + (th / 2)); // Top Face
-            });
+            // Collect Y levels from Shelves AND Top/Bottom Panels to define full internal volume
+            const horizontalParts = explodedParts.filter(p =>
+                p.name.includes('Shelf') || p.name === 'Top Panel' || p.name === 'Bottom Panel'
+            );
 
-            // Sort levels
-            yLevels.sort((a, b) => a - b);
+            // Sort by physical Y position (Ascending: Bottom -> Top)
+            horizontalParts.sort((a, b) => a.position.y - b.position.y);
 
-            // Filter out small gaps (thickness of shelves themselves)
-            // Valid gap > 5cm
-            const validIntervals = [];
-            for (let i = 0; i < yLevels.length - 1; i++) {
-                const diff = yLevels[i + 1] - yLevels[i];
+            const validIntervals = []; // Resulting gaps
+
+            // Iterate pairs to find GAPS BETWEEN parts
+            for (let i = 0; i < horizontalParts.length - 1; i++) {
+                const lower = horizontalParts[i];
+                const upper = horizontalParts[i + 1];
+
+                const lowerTopFace = lower.position.y + (safeNum(lower.dimensions.height) / 2);
+                const upperBottomFace = upper.position.y - (safeNum(upper.dimensions.height) / 2);
+
+                const diff = upperBottomFace - lowerTopFace;
+
+                // Gap must be meaningful (> 5cm)
                 if (diff > 5) {
-                    validIntervals.push({ start: yLevels[i], end: yLevels[i + 1], height: diff });
+                    validIntervals.push({ start: lowerTopFace, end: upperBottomFace, height: diff });
                 }
             }
 
             // 2. Place partitions
-            const strategy = part.meta?.strategy || 'random-shelves';
+            // Logic Overhaul: Use robust pattern matching and strict counting
+            const strategy = part.meta?.strategy || 'none';
 
             validIntervals.forEach((interval, intervalIdx) => {
                 const totalIntervals = validIntervals.length;
+                // VISUAL INDEX: 1-based, Top-down
+                // intervalIdx 0 is Bottom (due to Y-sort). Max is Top.
+                // 1 = Top
+                // N = Bottom
+                // internalIdx (0=Bottom) -> visualIdx (1=Top ... N=Bottom)
+                const visualIdx = totalIntervals - intervalIdx; // 1-based index (1=Top)
 
-                // 1. Identify active modifier for this shelf
+                // 1. Identification: Determine Modifier for this Visual Index
                 const modifiers = part.meta?.modifiers || [];
-                let mod = null;
+                let activeMod = null;
 
-                // VISUAL INDEXING: 0 = Top, Max = Bottom
-                // internal 'intervalIdx' is 0=Bottom, Max=Top (due to yLevels numeric sort)
-                // So: visualIdx = (totalIntervals - 1) - intervalIdx
-                const visualIdx = (totalIntervals - 1) - intervalIdx;
+                // Priority 1: Specific Target Match
+                activeMod = modifiers.find(m => {
+                    const t = String(m.target).toLowerCase();
+                    if (t === String(visualIdx)) return true; // "1", "2"...
+                    if (t === 'top' && visualIdx === 1) return true;
+                    if (t === 'bottom' && visualIdx === totalIntervals) return true;
+                    return false;
+                });
 
-                if (modifiers.length > 0) {
-                    // 1. Exact Index (User uses 1-based indexing: 1 = Top)
-                    mod = modifiers.find(m => m.target === String(visualIdx + 1));
-
-                    // 2. Keywords (loose)
-                    if (!mod) {
-                        const targetLower = (m) => m.target.toLowerCase();
-
-                        // Top = Visual 0
-                        if (visualIdx === 0) {
-                            mod = modifiers.find(m => targetLower(m).includes('top'));
+                // Priority 2: Pattern Match (Only if no specific target found)
+                if (!activeMod) {
+                    activeMod = modifiers.find(m => {
+                        const t = String(m.target).toLowerCase();
+                        if (t === 'odd' && visualIdx % 2 !== 0) return true;
+                        if (t === 'even' && visualIdx % 2 === 0) return true;
+                        if (t.startsWith('every ')) {
+                            const n = parseInt(t.replace('every ', ''));
+                            if (!isNaN(n) && visualIdx % n === 0) return true;
                         }
-                        // Bottom = Visual Max
-                        else if (visualIdx === totalIntervals - 1) {
-                            mod = modifiers.find(m => targetLower(m).includes('bottom'));
-                        }
-                        // Middle / Rest
-                        else {
-                            mod = modifiers.find(m => targetLower(m).includes('middle'));
-                        }
-                    }
-
-                    // 3. Fallback Rest (applies to anything not matched above)
-                    if (!mod) {
-                        mod = modifiers.find(m => m.target.toLowerCase().includes('rest'));
-                    }
-                }
-
-                // 2. Determine Placement (Strategy OR Modifier Force)
-                let shouldPlace = false;
-                if (mod) {
-                    shouldPlace = true; // Rule forces placement
-                } else {
-                    // Fallback to global strategy
-                    if (strategy === 'all-shelves') shouldPlace = true;
-                    else if (strategy === 'random-shelves') shouldPlace = Math.random() > 0.3;
-                }
-
-                if (shouldPlace) {
-                    let ratioStr = mod?.ratio || part.meta?.ratio;
-                    let count = (mod?.count !== undefined) ? mod.count : (part.meta?.count || 1);
-
-                    // Stop if count explicitly 0
-                    if (count === 0) return;
-
-                    // Infer count from ratio if explicit count not provided but ratio has >2 segments
-                    // Ex: "33-33-33" -> 3 segments -> 2 cuts
-                    // Only do this if we didn't get an explicit count override from mod
-                    let ratioSegments = [];
-                    if (ratioStr && ratioStr !== 'random' && ratioStr !== 'center' && ratioStr.includes('-')) {
-                        const parts = ratioStr.split('-').map(p => parseFloat(p)).filter(n => !isNaN(n));
-                        if (parts.length > 2) {
-                            // Use inferred count unless mod explicitly set it
-                            if (!mod || mod.count === undefined) {
-                                count = parts.length - 1;
+                        if (t.includes('range')) {
+                            // "range 2-4"
+                            const match = t.match(/range\s*(\d+)-(\d+)/);
+                            if (match) {
+                                const start = parseInt(match[1]);
+                                const end = parseInt(match[2]);
+                                if (visualIdx >= start && visualIdx <= end) return true;
                             }
                         }
-                        ratioSegments = parts;
-                    }
-
-                    // Calculate Cut Positions (0.0 to 1.0 relative to width)
-                    let cuts = [];
-
-                    // STRATEGY: RATIO
-                    if (ratioSegments.length > 0) {
-                        const total = ratioSegments.reduce((a, b) => a + b, 0);
-                        let accum = 0;
-                        // For N segments, we have N-1 cuts between them
-                        for (let i = 0; i < ratioSegments.length - 1; i++) {
-                            accum += ratioSegments[i];
-                            cuts.push(accum / total);
-                        }
-                        // Simplified
-                        count = cuts.length;
-                    }
-                    // STRATEGY: RANDOM (Explicit 'random' or default random strategy if no override)
-                    else if (ratioStr === 'random' || (strategy === 'random-shelves' && !ratioStr)) {
-                        for (let i = 0; i < count; i++) {
-                            // Random pos between 20% and 80%
-                            cuts.push(0.2 + (Math.random() * 0.6));
-                        }
-                    }
-                    // STRATEGY: EQUAL (Default catch-all)
-                    else {
-                        for (let i = 0; i < count; i++) {
-                            cuts.push((i + 1) / (count + 1));
-                        }
-                        // Handle simple "60-40" type ratio for single partition override if count==1
-                        if (count === 1 && ratioStr && ratioStr.includes('-') && ratioSegments.length === 2) {
-                            const total = ratioSegments[0] + ratioSegments[1];
-                            cuts = [ratioSegments[0] / total];
-                        }
-                    }
-                    // Generate Parts at Cuts
-                    cuts.forEach((cutPct, cutIdx) => {
-                        const xOff = (-dimensions.length / 2) + (cutPct * dimensions.length);
-                        explodedParts.push({
-                            ...part,
-                            id: `${part.id}-${intervalIdx}-${cutIdx}`,
-                            originalId: part.id,
-                            quantity: 1,
-                            dimensions: { ...part.dimensions, height: interval.height },
-                            position: { x: xOff, y: interval.start + (interval.height / 2), z: 0 }
-                        });
+                        return false;
                     });
                 }
+
+                // Priority 3: Global "Rest" fallback
+                // Note: "Rest" only applies if NO other rule matched.
+                if (!activeMod) {
+                    activeMod = modifiers.find(m => m.target.toLowerCase() === 'rest');
+                }
+
+                // 2. Logic Decision: Place Partitions?
+                // If modifier exists, use it. If not, check "all-shelves" strategy.
+                let shouldPlace = false;
+                let finalCount = 0; // Sections
+                let finalRatio = null;
+
+                if (activeMod) {
+                    shouldPlace = true;
+                    finalCount = (activeMod.count !== undefined) ? activeMod.count : 1;
+                    finalRatio = activeMod.ratio;
+                } else if (strategy === 'all-shelves') {
+                    shouldPlace = true;
+                    // Use global count if available, otherwise default to 1 section (0 dividers)
+                    finalCount = (part.meta?.count !== undefined) ? part.meta.count : 1;
+                    finalRatio = part.meta?.ratio;
+                } else if (strategy === 'random-shelves') {
+                    // Legacy support, but we prefer clean now
+                    shouldPlace = Math.random() > 0.3;
+                }
+
+                // Terminology Update (Dec 2025):
+                // Count = Physical Dividers (Boards).
+                // Sections = Count + 1.
+                // "2 partitions" = 2 boards. 
+
+                // If Ratio is present, it overrules Count.
+                // Ratio "1:1" (2 segments) -> 1 Divider.
+
+                let numDividers = 0;
+
+                // Case A: Ratio defines the count (Implicitly)
+                let ratioSegments = [];
+                if (finalRatio && finalRatio.includes('-') && finalRatio !== 'random') {
+                    ratioSegments = finalRatio.split('-').map(Number).filter(n => !isNaN(n));
+                } else if (finalRatio && finalRatio.includes(':')) {
+                    ratioSegments = finalRatio.split(':').map(Number).filter(n => !isNaN(n));
+                }
+
+                if (ratioSegments.length > 1) {
+                    // Ratio "1:1" -> 2 segments -> 1 divider
+                    numDividers = ratioSegments.length - 1;
+                } else {
+                    // Case B: Explicit Count (Physical Boards)
+                    numDividers = Math.max(0, finalCount);
+                }
+
+                // Safety
+                if (!shouldPlace || numDividers <= 0) return;
+
+                // Robustness: Crowding Check
+                // Width / Sections = SectionWidth.
+                // If SectionWidth < (Thickness * 3)?
+                // Or simplified: Dividers * Thickness > Width * 30%
+                const dividerThickness = part.dimensions.length; // X dim
+                const totalDividerWidth = numDividers * dividerThickness;
+                if (totalDividerWidth > dimensions.length * 0.3) {
+                    const msg = `Crowding: ${numDividers} dividers take >30% width. Skipping partition.`;
+                    console.warn(`[FurnitureEngineering] ${msg}`);
+                    warnings.push(msg);
+                    // Optional: Could clamp count instead of skipping.
+                    // For now, strict skip to avoid physical mess.
+                    return;
+                }
+
+                // 3. Spacing Calculation
+                let cuts = [];
+                // ratioSegments already calculated above for logic decision
+
+
+                // Ambiguity Check: Ratio Segments vs Count
+                // If Ratio has 3 segments (33-33-33), it implies 3 sections (2 dividers).
+                // If User specified Count=5 but Ratio=33-33-33... Ambiguous.
+                // Logic: 
+                // 1. If Ratio provided, Count is inferred from Ratio segments (Overrules Count).
+                // 2. If no Ratio, utilize Count for Equal Spacing.
+
+                if (ratioSegments.length > 1) {
+                    // Logic: Strict Ratio Adherence
+                    const totalRatio = ratioSegments.reduce((a, b) => a + b, 0);
+                    let currentPos = 0;
+                    // We need N-1 cuts for N segments
+                    for (let i = 0; i < ratioSegments.length - 1; i++) {
+                        currentPos += ratioSegments[i];
+                        cuts.push(currentPos / totalRatio);
+                    }
+                } else {
+                    // Logic: Equal Spacing (Default)
+                    for (let i = 0; i < numDividers; i++) {
+                        cuts.push((i + 1) / (numDividers + 1));
+                    }
+                }
+
+                // 4. Generate Geometry
+                cuts.forEach((cutPct, cutIdx) => {
+                    // Clamp for safety
+                    if (cutPct <= 0.05 || cutPct >= 0.95) return;
+
+                    const xOff = (-dimensions.length / 2) + (cutPct * dimensions.length);
+                    explodedParts.push({
+                        ...part,
+                        id: `${part.id}-${intervalIdx}-${cutIdx}`,
+                        originalId: part.id,
+                        quantity: 1,
+                        dimensions: { ...part.dimensions, height: interval.height },
+                        position: { x: xOff, y: interval.start + (interval.height / 2), z: 0 }
+                    });
+                });
             });
         }
         // Pattern 4: SIDES (Bookshelf Sides)
@@ -814,7 +858,7 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
 
 
 
-    return explodedParts;
+    return { parts: explodedParts, warnings };
 }
 
 /**

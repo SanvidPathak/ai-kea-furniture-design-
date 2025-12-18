@@ -99,8 +99,8 @@ export function DesignPreview({ design }) {
       <ErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
 
       {/* 3D Preview */}
-      {design.geometry3D && (
-        <ThreeJSViewer geometry3D={design.geometry3D} />
+      {(design.geometry || design.geometry3D) && (
+        <ThreeJSViewer geometry3D={design.geometry || design.geometry3D} />
       )}
 
       {/* Design Header */}

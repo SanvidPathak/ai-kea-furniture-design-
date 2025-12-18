@@ -49,6 +49,7 @@ export async function generateFromNaturalLanguage(userInput) {
       partitionStrategy: aiParams.partitionStrategy,
       partitionRatio: aiParams.partitionRatio, // 60-40, 50-50, etc.
       partitionCount: aiParams.partitionCount, // Number of partitions per shelf
+      shelves: aiParams.shelfCount, // Pass horizontal shelf count
       shelfModifiers: aiParams.shelfModifiers || [], // Per-shelf overrides
     });
 

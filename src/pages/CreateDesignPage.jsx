@@ -58,6 +58,25 @@ export function CreateDesignPage() {
 
         {/* Right Column - Preview */}
         <div>
+          {design && design.warnings && design.warnings.length > 0 && (
+            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 rounded-r-md animate-fade-in">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <span className="text-yellow-400">⚠️</span>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Design Clarity Note</h3>
+                  <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                    <ul className="list-disc pl-5 space-y-1">
+                      {design.warnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           <DesignPreview design={design} />
         </div>
       </div>

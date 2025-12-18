@@ -176,11 +176,53 @@ function generateChairParts(dimensions, material, color, engineeringSpecs) {
  */
 function generateBookshelfParts(dimensions, material, color, engineeringSpecs) {
   const { length, width, height } = dimensions;
-  const thickness = 2;
-  // If user asks for "5 shelves", we assume they mean 5 internal adjustable shelves.
-  // We do NOT subtract 1 for the bottom/top.
-  const totalShelves = engineeringSpecs.shelves || 5;
-  const internalShelves = totalShelves;
+  const thickness = 2; // Shelf thickness
+  const baseHeight = 10; // Bottom Panel height
+  const topHeight = 2;   // Top Panel height
+
+  // 1. Calculate Usable Height
+  const usableHeight = height - baseHeight - topHeight;
+
+  // 2. Determine Shelf Count
+  let internalShelves = 0;
+
+  if (engineeringSpecs.shelves) {
+    // User requested specific count.
+    // UX Decision: User perceives "Shelves" as Total Horizontal Surfaces.
+    // 1 of them is the Bottom Panel.
+    // So, Internal Shelves = Requested - 1.
+    // Exception: If they ask for 1 shelf, that's just the bottom panel? Or 1 internal?
+    // Let's assume user count includes the bottom.
+    // "7 shelves" -> 6 internal + 1 bottom = 7 surfaces.
+
+    // Ensure we don't go negative if user says 0 or 1.
+    internalShelves = Math.max(0, engineeringSpecs.shelves - 1);
+
+    // Constraint Check: Minimum 20cm gap
+    const minGap = 20;
+    const maxShelves = Math.floor((usableHeight - minGap) / (thickness + minGap));
+
+    if (internalShelves > maxShelves) {
+      // User wanted X total (X-1 internal).
+      // If we cap internal, we effectively cap total.
+      const cappedTotal = maxShelves + 1;
+      const msg = `Requested ${engineeringSpecs.shelves} shelves, capped at ${cappedTotal} for viability (min 20cm gap).`;
+      console.warn(`[DesignGenerator] ${msg}`);
+
+      // Push to engineeringSpecs.warnings (Pass-by-reference to bubble up)
+      if (!engineeringSpecs.warnings) engineeringSpecs.warnings = [];
+      engineeringSpecs.warnings.push(msg);
+
+      internalShelves = maxShelves;
+    }
+  } else {
+    // Auto-calculate based on ideal 35cm gap
+    const idealGap = 35;
+    internalShelves = Math.floor((usableHeight - idealGap) / (idealGap + thickness));
+
+    // Fallback/Clamp
+    internalShelves = Math.max(1, internalShelves);
+  }
 
   const parts = [
     {
@@ -230,38 +272,32 @@ function generateBookshelfParts(dimensions, material, color, engineeringSpecs) {
       // Thicker base to raise off ground
       dimensions: { length, width, height: 10 },
       quantity: 1,
+      anchorPattern: 'bottom',
       material,
       color,
     },
-  ];
-
-  // Vertical Partitions
-  if (['all-shelves', 'random-shelves'].includes(engineeringSpecs.partitionStrategy)) {
-    // Determine quantity based on shelves. At least 1 per shelf interval.
-    // We have `internalShelves` intervals + top gap = totalShelves intervals.
-    // Let's say we want 1 partition per shelf level.
-    parts.push({
-      id: 'bookshelf-partition',
-      name: 'Vertical Partition',
+    // PARTITION MANAGER (Virtual Part -> Spawns Dividers)
+    {
+      id: 'bookshelf-partition', // Renamed from 'bookshelf-divider' for consistency
+      name: 'Vertical Partition', // Renamed from 'Partition'
       type: 'support',
-      // Height will be auto-calculated by engineering (fits gap)
-      // Length is thickness (X). Width is Depth (Z).
-      dimensions: { length: thickness, width: width, height: 30 },
-      quantity: internalShelves + 1, // One for each gap (Bottom->Shelf1... ShelfN->Top)
-      anchorPattern: 'vertical-partition',
-      material,
-      color,
+      // Start with standard thickness. Height is dynamic (per interval).
+      dimensions: { length: thickness, width: width, height: 10 },
+      quantity: 1, // Placeholder. Logic updates this based on 3D generation.
       anchorPattern: 'vertical-partition',
       material,
       color,
       meta: {
         strategy: engineeringSpecs.partitionStrategy,
-        ratio: engineeringSpecs.partitionRatio, // Pass 60-40, 0.6, etc.
-        count: engineeringSpecs.partitionCount, // Pass explicit count if available
-        modifiers: engineeringSpecs.shelfModifiers // Pass per-shelf rules
+        ratio: engineeringSpecs.partitionRatio,
+        count: engineeringSpecs.partitionCount,
+        modifiers: engineeringSpecs.shelfModifiers
       }
-    });
-  }
+    }
+  ];
+
+  // Logic block for manual partition addition removed.
+  // 'bookshelf-partition' above handles all cases via applyAnchorPoints.
 
   if (engineeringSpecs.additions) {
     engineeringSpecs.additions.forEach(add => {
@@ -645,13 +681,34 @@ export async function generateDesign(config) {
     totalCost,
     instructions,
     assemblyTime,
-    structural: structuralReport // Attach engineering data
+    structural: structuralReport, // Attach engineering data
+    warnings: [...(engineeringSpecs.warnings || [])] // Merge AI warnings and Engineering warnings
   };
 
   // --- 3D GENERATION PHASE ---
   // Apply Engineering Anchors to calculate explicit positions
   // This "explodes" parts (Leg x4 becomes Leg-1, Leg-2...) and sets precise x/y/z
-  const positionedParts = applyAnchorPoints(parts, furnitureType, finalDimensions);
+  const { parts: positionedParts, warnings: anchorsWarnings } = applyAnchorPoints(parts, furnitureType, finalDimensions, structuralReport);
+
+  // Combine all warnings
+  const finalWarnings = [...design.warnings, ...(anchorsWarnings || [])];
+
+  // --- BOM CORRECTION PHASE ---
+  // Recalculate quantities based on actual 3D parts generated
+  const partCounts = {};
+  positionedParts.forEach(p => {
+    // Normalize name or ID to group properly.
+    // If ID is unique (e.g. leg-1), group by Name.
+    // Assuming design.parts has the canonical names.
+    const key = p.name;
+    partCounts[key] = (partCounts[key] || 0) + 1;
+  });
+
+  // Update design.parts with actual counts
+  const correctedParts = design.parts.map(originalPart => {
+    const actualCount = partCounts[originalPart.name] || 0;
+    return { ...originalPart, quantity: actualCount };
+  }).filter(p => p.quantity > 0); // Remove parts that were optimized away (e.g. 0 partitions)
 
   const geometry3D = generateThreeJSGeometry({
     ...design,
@@ -660,6 +717,8 @@ export async function generateDesign(config) {
 
   return {
     ...design,
-    geometry3D
+    parts: correctedParts, // Use corrected BOM
+    warnings: finalWarnings, // Override with full list
+    geometry: geometry3D
   };
 }

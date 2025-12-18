@@ -79,6 +79,10 @@ const FURNITURE_DESIGN_SCHEMA = {
       type: 'integer',
       description: 'Number of vertical partitions per shelf. Default is 1.'
     },
+    shelfCount: {
+      type: 'integer',
+      description: 'Number of horizontal shelves requested. Optional. If unspecified, auto-calculated.'
+    },
     shelfModifiers: {
       type: 'array',
       items: {
@@ -90,6 +94,11 @@ const FURNITURE_DESIGN_SCHEMA = {
         }
       },
       description: 'Specific rules for individual shelves. Overrides global settings.'
+    },
+    warnings: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'List of alerts/warnings about ambiguity or physical constraints to show the user.'
     }
   },
   required: ['furnitureType', 'material', 'dimensions', 'materialColor', 'styleNotes', 'confidence', 'projectedLoad', 'partitionStrategy']
@@ -110,37 +119,58 @@ Materials: wood (#8B4513), metal (#2C2C2C), plastic (#FFFFFF).
 - Bookshelf: length 60-120, width 25-35, height 150-220.
 - Bed: Single 190x90, Double 190x140, Queen 200x150
 - "small" -> -20% size. "kids" -> -30% height.
+- "small" -> -20% size. "kids" -> -30% height.
 - Extract load/weight capacity if mentioned (e.g. "for 200kg" -> projectedLoad: 200)
+- Extract SHELF COUNT if mentioned (e.g. "7 shelves" -> shelfCount: 7).
 
 **Instructions**:
 - Return ONLY valid JSON matching this exact structure.
 - **CRITICAL: Bookshelf Partitions**:
-  - If user implies partitions, set "partitionStrategy": "all-shelves" or "random-shelves".
-  - "partitionCount": Number of partitions per shelf (default 1).
-  - "partitionRatio": Global ratio (e.g. "50-50", "60-40").
-  - **"shelfModifiers"**: Use this for ANY specific shelf rules (top, bottom, middle, rest).
-    - Example: "Top shelf 2 partitions, rest 60-40" -> 
-      shelfModifiers: [{ "target": "top", "count": 2 }, { "target": "rest", "ratio": "60-40" }]
-    - "target": "top", "bottom", "rest", or index "0", "1"...
+  - **Terminology**: "Partitions" = "Dividers" (Physical Boards). "2 partitions" = 2 boards.
+  - **Strategy**: Default "none". Only use "all-shelves" if explicitly asked.
+  - **Indexing**: 1-based, Top-down. "Top" = Shelf 1. "Bottom" = Last Shelf.
+  - **Indexing Patterns**: Support "odd", "even", "every 2nd", "range 2-4".
+  - **Specific vs Global**: Specific rules (\`shelfModifiers\`) OVERRIDE global settings.
+  
+  - **"shelfModifiers"**: Use this for specific shelf rules.
+    - If user specifies rules for SOME shelves, set "partitionStrategy": "none".
+    - Example: "Top shelf 2 sections" -> 
+      partitionStrategy: "none",
+      shelfModifiers: [{ "target": "top", "count": 2 }]
+    - Target: "top", "bottom", "rest", "odd", "even", or index "1", "2"...
+    - **Resolution Rule**: If a specific shelf matches multiple rules (e.g. "Range 1-3" and "Shelf 2"), you MUST output BOTH rules in the list. Do not try to merge or optimize them. The engine prioritizes specific targets (e.g. '2') over patterns (e.g. 'range').
+  - **Ambiguity & Warnings**:
+    - If the user provides conflicting info (e.g. "ratio 1:2" implying 2 sections, but asks for "5 partitions"), prioritize the Ratio but ADD A WARNING to the \`warnings\` list explaining the conflict.
+    - If the design seems physically impossible (e.g. "100 shelves"), add a warning.
 
-JSON Example:
+JSON Examples:
+
+Example 1 (Simple / No Partitions):
 {
   "furnitureType": "table",
   "material": "wood",
   "materialColor": "#8B4513",
   "dimensions": { "length": 120, "width": 60, "height": 75 },
-  "styleNotes": "Modern style",
-  "confidence": "high",
-  "projectedLoad": 50,
-  "hasArmrests": false,
-  "partitionStrategy": "all-shelves",
-  "partitionRatio": "60-40",
+  "partitionStrategy": "none",
+  "partitionCount": 0,
+  "shelfModifiers": [],
+  "warnings": []
+}
+
+Example 2 (Complex Bookshelf):
+{
+  "furnitureType": "bookshelf",
+  "material": "wood",
+  "materialColor": "#5C4033",
+  "dimensions": { "length": 90, "width": 30, "height": 180 },
+  "partitionStrategy": "none",
   "partitionCount": 1,
   "shelfModifiers": [
-     { "target": "top", "count": 2, "ratio": "33-33-33" },
-     { "target": "bottom", "count": 0 },
-     { "target": "rest", "ratio": "60-40" }
-  ]
+     { "target": "1", "count": 3 },
+     { "target": "bottom", "count": 2, "ratio": "60-40" }
+  ],
+  "shelfCount": 5,
+  "warnings": []
 }
 `;
 
@@ -155,7 +185,7 @@ export async function parseNaturalLanguage(userInput) {
   // Check if Gemini is configured
   if (!isGeminiConfigured()) {
     throw new Error(
-      'Gemini AI not configured. Please add your API key to .env as VITE_GEMINI_API_KEY.\n' +
+      'Gemini AI not configured. Please add your API key to .env as VITE_GEMINI_API_KEY.\\n' +
       'Get your key from: https://aistudio.google.com/app/apikey'
     );
   }
@@ -171,7 +201,7 @@ export async function parseNaturalLanguage(userInput) {
 
   try {
     // Construct full prompt
-    const fullPrompt = `${SYSTEM_PROMPT}\n\n**User Request**: "${userInput.trim()}"\n\nParse this request and return the structured JSON.`;
+    const fullPrompt = `${SYSTEM_PROMPT}\\n\\n**User Request**: "${userInput.trim()}"\\n\\nParse this request and return the structured JSON.`;
 
     // Generate structured output using Gemini
     const result = await generateStructuredContent(
@@ -222,10 +252,32 @@ export async function parseNaturalLanguage(userInput) {
       materialColor: result.materialColor,
       projectedLoad: result.projectedLoad,
       hasArmrests: result.hasArmrests,
-      partitionStrategy: result.partitionStrategy,
+      // Rule: If specific shelf modifiers exist, we MUST enforce 'none' strategy globally
+      // to prevents the default behavior (all-shelves) from polluting the non-modified shelves.
+      partitionStrategy: (result.shelfModifiers && result.shelfModifiers.length > 0) ? 'none' : result.partitionStrategy,
       partitionRatio: result.partitionRatio,
       partitionCount: result.partitionCount,
+      shelfCount: result.shelfCount,
       shelfModifiers: result.shelfModifiers,
+      warnings: (() => {
+        const warnings = result.warnings || [];
+        // ambiguity validation logic
+        if (result.shelfModifiers) {
+          result.shelfModifiers.forEach(mod => {
+            if (mod.ratio && mod.count) {
+              // Check consistency
+              // If ratio has '-' check segments
+              const segments = mod.ratio.split(/[-:]/).length;
+              // Count = Sections (Spaces). Segments = Sections.
+              // They should match.
+              if (segments > 1 && segments !== mod.count) {
+                warnings.push(`Ambiguity detected on ${mod.target} shelf: 'Count ${mod.count}' contradicts 'Ratio ${mod.ratio}' (${segments} parts). System prioritized Ratio.`);
+              }
+            }
+          });
+        }
+        return warnings;
+      })(),
       // Store AI metadata for display
       _aiMetadata: {
         styleNotes: result.styleNotes,

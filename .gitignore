@@ -28,6 +28,7 @@ firestore-debug.log
 ui-debug.log
 debug-gemini.js
 
+
 # Logs
 logs
 *.log
@@ -68,8 +69,9 @@ FIREBASE_SETUP_GUIDE.md
 GEMINI_INTEGRATION_COMPLETE.md
 DEPLOY_GUIDE.md
 PHASES.md
-#ALGORITHM_PLAN.md
+ALGORITHM_PLAN.md
 DEPLOYMENT.md
+test.md
 
 docs/
 
@@ -84,6 +86,8 @@ test-gemini-connection.js
 test-simple-write.js
 debug-firebase.js
 test-phase3.js
+debug_bookshelf_logic.js
+reproduce_conflict_bug.js
 
 PROJECT_TIMELINE.csv
 
