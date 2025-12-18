@@ -35,7 +35,7 @@ export function CreateDesignPage() {
       {/* Two Column Layout */}
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Left Column - Form */}
-        <div>
+        <div className="min-w-0">
           <div className="card">
             <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
               Design Parameters
@@ -57,7 +57,7 @@ export function CreateDesignPage() {
         </div>
 
         {/* Right Column - Preview */}
-        <div>
+        <div className="min-w-0">
           {design && design.warnings && design.warnings.length > 0 && (
             <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 rounded-r-md animate-fade-in">
               <div className="flex">
