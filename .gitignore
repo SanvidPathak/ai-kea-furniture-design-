@@ -89,6 +89,7 @@ debug-firebase.js
 test-phase3.js
 debug_bookshelf_logic.js
 reproduce_conflict_bug.js
+test-functions.js
 
 PROJECT_TIMELINE.csv
 
