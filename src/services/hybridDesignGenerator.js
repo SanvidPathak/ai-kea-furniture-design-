@@ -10,7 +10,8 @@
  */
 
 import { generateDesign } from './designGenerator.js';
-import { parseNaturalLanguage, isNaturalLanguageInput } from './aiDesignParser.js';
+import { isNaturalLanguageInput } from './aiDesignParser.js';
+import { parseNaturalLanguage } from './apiClient.js';
 import { isGeminiConfigured } from './geminiService.js';
 
 /**

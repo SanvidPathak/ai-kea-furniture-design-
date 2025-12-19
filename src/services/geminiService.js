@@ -28,6 +28,8 @@ const getEnvVar = (key) => {
 // Initialize Gemini AI client
 const apiKey = getEnvVar('VITE_GEMINI_API_KEY');
 
+/* 
+// Client-side key check disabled - using Cloud Functions
 if (!apiKey || apiKey === 'your-gemini-api-key-here') {
   console.warn(
     'WARNING: Gemini API key not configured. AI features will be disabled.\n' +
@@ -35,6 +37,7 @@ if (!apiKey || apiKey === 'your-gemini-api-key-here') {
     'Add it to .env as: VITE_GEMINI_API_KEY=your-key'
   );
 }
+*/
 
 const ai = apiKey && apiKey !== 'your-gemini-api-key-here'
   ? new GoogleGenAI({ apiKey })
@@ -279,8 +282,9 @@ export async function generateTextContent(prompt, options = {}) {
  *
  * @returns {boolean} - True if AI is configured
  */
+// Backend handles AI, so we are always configured
 export function isGeminiConfigured() {
-  return ai !== null;
+  return true;
 }
 
 /**

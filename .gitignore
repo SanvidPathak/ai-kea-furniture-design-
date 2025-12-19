@@ -58,7 +58,7 @@ Thumbs.db
 *.temp
 .cache/
 
-# Project documentation (exclude all project .md files except README.md)
+Project documentation (exclude all project .md files except README.md)
 BUILD_FROM_SCRATCH.md
 TEST_REPORT.md
 IMPLEMENTATION_LOG.md
@@ -72,6 +72,7 @@ PHASES.md
 ALGORITHM_PLAN.md
 DEPLOYMENT.md
 test.md
+PROJECT_HANDOVER.md
 
 docs/
 
@@ -80,7 +81,7 @@ deploy.sh
 deploy.bat
 deploy.ps1
 
-# Test and debug files
+Test and debug files
 test-backend.js
 test-gemini-connection.js
 test-simple-write.js

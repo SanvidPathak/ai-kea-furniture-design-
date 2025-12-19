@@ -87,3 +87,25 @@ The project has evolved from a basic furniture generator to a robust, engineered
 *   `debug_bookshelf_logic.js`: Validates shelf counting and crowding checks.
 
 **Good luck! The logic is currently verified and stable.**
+
+---
+
+## 6. Status Update: Dec 2024 - Security & Backend Migration
+
+### ✅ Backend Migration (Cloud Functions)
+*   **Goal:** Secure the Gemini API Key and prevent client-side exposure.
+*   **Implementation:**
+    *   **Logic Moved:** AI parsing logic from `aiDesignParser.js` moved to `functions/index.js`.
+    *   **New Client:** `src/services/apiClient.js` created to call the Cloud Function.
+    *   **Frontend Check Disabled:** `src/services/geminiService.js` no longer checks for `VITE_GEMINI_API_KEY`.
+    *   **Secrets:** API Key is stored safely in Google Secret Manager (`GEMINI_API_KEY`).
+
+### ✅ Security Enhancements
+*   **API Key:** Removed from `.env` and client bundles.
+*   **CSP:** Updated `index.html` to allow connections to `cloudfunctions.net`.
+*   **Input Validation:** Backend enforces strict schema and input length checks.
+
+### 📝 Future Development Advice
+*   **Maintain Parity:** If you update the "System Prompt" or JSON Schema, you must now update it in **`functions/index.js`**, NOT the frontend file. The frontend file `aiDesignParser.js` is now mostly a reference/legacy file (though `isNaturalLanguageInput` is still used).
+*   **Cost Monitoring:** Monitor usage in the Firebase Console. Since the key is hidden, you are protected from external theft, but legitimate user traffic still costs money.
+*   **Rate Limiting:** If traffic grows, implement rate limiting in the Cloud Function or use Firebase App Check.

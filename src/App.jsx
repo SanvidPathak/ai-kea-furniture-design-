@@ -7,6 +7,7 @@ import { LoadingSpinner } from './components/common/LoadingSpinner.jsx';
 import { AuroraBackground } from './components/common/AuroraBackground.jsx';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import { MainLayout } from './components/common/MainLayout.jsx';
+import { PrivateRoute } from './components/common/PrivateRoute.jsx';
 
 // Lazy load pages for better performance
 const HomePage = lazy(() => import('./pages/HomePage.jsx').then(m => ({ default: m.HomePage })));
@@ -41,12 +42,36 @@ function App() {
                   <Routes>
                     <Route element={<MainLayout />}>
                       <Route path="/" element={<HomePage />} />
-                      <Route path="/create" element={<CreateDesignPage />} />
-                      <Route path="/designs" element={<MyDesignsPage />} />
-                      <Route path="/designs/:id" element={<DesignDetailPage />} />
-                      <Route path="/orders" element={<MyOrdersPage />} />
-                      <Route path="/orders/:id" element={<OrderDetailPage />} />
-                      <Route path="/account" element={<AccountPage />} />
+                      <Route path="/create" element={
+                        <PrivateRoute>
+                          <CreateDesignPage />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/designs" element={
+                        <PrivateRoute>
+                          <MyDesignsPage />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/designs/:id" element={
+                        <PrivateRoute>
+                          <DesignDetailPage />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/orders" element={
+                        <PrivateRoute>
+                          <MyOrdersPage />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/orders/:id" element={
+                        <PrivateRoute>
+                          <OrderDetailPage />
+                        </PrivateRoute>
+                      } />
+                      <Route path="/account" element={
+                        <PrivateRoute>
+                          <AccountPage />
+                        </PrivateRoute>
+                      } />
                       <Route path="*" element={<NotFoundPage />} />
                     </Route>
                     <Route element={<MainLayout />}>

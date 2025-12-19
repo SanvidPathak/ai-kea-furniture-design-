@@ -17,6 +17,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { getFirestoreInstance } from './firestoreConfig.js';
+import { calculateTotalCost } from './designGenerator.js';
 
 // Collection name - same as designs (single collection architecture)
 const COLLECTION_NAME = 'mydb';
@@ -46,6 +47,24 @@ export async function saveOrder(userId, orderData) {
   try {
     const db = getFirestoreInstance();
     const ordersRef = collection(db, COLLECTION_NAME);
+
+    // SECURITY FIX: Pre-Save Price Validation
+    // Recalculate cost serverside (or service-side) to prevent tampering
+    if (orderData.parts && orderData.material) {
+      try {
+        const calculatedCost = calculateTotalCost(orderData.parts, orderData.material);
+        const submittedAmount = Number(orderData.totalAmount);
+
+        // Allow small floating point difference (0.1)
+        if (Math.abs(calculatedCost - submittedAmount) > 0.5) {
+          console.error(`Price tampering detected! Calculated: ${calculatedCost}, Submitted: ${submittedAmount}`);
+          throw new Error('Security Alert: Order price mismatch. Transaction blocked.');
+        }
+      } catch (err) {
+        if (err.message.includes('Security Alert')) throw err;
+        console.warn('Could not validate price pre-save:', err);
+      }
+    }
 
     // Add userId, type, status, status history, and timestamps to the order
     const orderDoc = {
