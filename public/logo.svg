@@ -1,0 +1,90 @@
+<svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      /* Light Mode Defaults (Matches stroke-blue-700, stroke-white) */
+      --wireframe-stroke: #1d4ed8; 
+      --wireframe-dim: #1d4ed8; 
+      --glitch-primary: #3b82f6;
+      --glitch-secondary: #3b82f6;
+      --split-line: white;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* Dark Mode Defaults (Matches dark:stroke-cyan-400, dark:stroke-black) */
+        --wireframe-stroke: #22d3ee;
+        --wireframe-dim: #22d3ee;
+        --glitch-primary: #67e8f9;
+        --glitch-secondary: #67e8f9;
+        --split-line: black;
+      }
+    }
+  </style>
+
+  <defs>
+    <!-- Wood Gradient for the physical side -->
+    <linearGradient id="woodGradient" x1="0" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#4A3728" />
+      <stop offset="100%" stopColor="#2D1B15" />
+    </linearGradient>
+    <!-- Glow Filter for the digital side -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <clipPath id="clipperLeft">
+      <rect x="0" y="0" width="50" height="100" />
+    </clipPath>
+    <clipPath id="clipperRight">
+      <rect x="50" y="0" width="50" height="100" />
+    </clipPath>
+  </defs>
+
+  <!-- LEFT SIDE: PHYSICAL (Solid Wood) -->
+  <g clipPath="url(#clipperLeft)">
+    <!-- Chair Body -->
+    <path
+      d="M30 20 L30 60 L20 60 L20 90 L30 90 L30 70 L70 70 L70 90 L80 90 L80 60 L70 60 L70 20 Z"
+      fill="url(#woodGradient)"
+      stroke="black"
+      stroke-width="1"
+    />
+    <!-- Backrest Slats -->
+    <rect x="38" y="25" width="6" height="30" rx="1" fill="#3E2723" stroke="black" stroke-width="1" />
+    <rect x="56" y="25" width="6" height="30" rx="1" fill="#3E2723" stroke="black" stroke-width="1" />
+  </g>
+
+  <!-- RIGHT SIDE: DIGITAL (Wireframe Glitch) -->
+  <g clipPath="url(#clipperRight)" filter="url(#neonGlow)">
+    <!-- Wireframe Outline -->
+    <path
+      d="M30 20 L30 60 L20 60 L20 90 L30 90 L30 70 L70 70 L70 90 L80 90 L80 60 L70 60 L70 20 Z"
+      style="stroke: var(--wireframe-stroke)"
+      stroke-width="2"
+      fill="none"
+    />
+    <!-- Wireframe Internal Mesh -->
+    <path d="M30 20 L70 20" style="stroke: var(--wireframe-dim)" stroke-width="1" opacity="0.5" />
+    <path d="M30 60 L70 60" style="stroke: var(--wireframe-dim)" stroke-width="1" opacity="0.5" />
+
+    <!-- Vertical Mesh Lines -->
+    <path d="M41 20 L41 60" style="stroke: var(--wireframe-dim)" stroke-width="1" opacity="0.5" />
+    <path d="M59 20 L59 60" style="stroke: var(--wireframe-dim)" stroke-width="1" opacity="0.5" />
+
+    <!-- Glitch Rectangles -->
+    <rect x="75" y="30" width="10" height="2" style="fill: var(--glitch-primary)" opacity="0.8" />
+    <rect x="82" y="45" width="6" height="2" style="fill: var(--glitch-secondary)" opacity="0.6" />
+    <rect x="48" y="10" width="4" height="4" fill="#a855f7" opacity="0.9" />
+  </g>
+
+  <!-- Split Line -->
+  <path
+    d="M50 10 L48 25 L52 40 L48 55 L52 70 L50 90"
+    style="stroke: var(--split-line)"
+    stroke-width="2"
+    fill="none"
+  />
+</svg>
