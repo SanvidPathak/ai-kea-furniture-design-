@@ -58,7 +58,7 @@ Thumbs.db
 *.temp
 .cache/
 
-Project documentation (exclude all project .md files except README.md)
+#Project documentation (exclude all project .md files except README.md)
 BUILD_FROM_SCRATCH.md
 TEST_REPORT.md
 IMPLEMENTATION_LOG.md
@@ -71,8 +71,9 @@ DEPLOY_GUIDE.md
 PHASES.md
 ALGORITHM_PLAN.md
 DEPLOYMENT.md
-test.md
 PROJECT_HANDOVER.md
+bookshelf_test.md
+desk_test.md
 
 docs/
 

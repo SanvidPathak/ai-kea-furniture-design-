@@ -122,6 +122,21 @@ export function AIDesignInput({ onDesignGenerated }) {
         </p>
       </div>
 
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        loading={loading}
+        disabled={!userInput.trim()}
+        className="w-full mb-4"
+      >
+        {loading ? 'Generating with AI...' : 'Generate Design with AI'}
+      </Button>
+
+      {/* Rate Limit Info */}
+      <div className="text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 p-3 rounded mb-4">
+        <strong>Free Tier Limits:</strong> 10 requests/minute, 250 requests/day
+      </div>
+
       {/* Example Prompts */}
       {showExamples && (
         <div>
@@ -151,20 +166,7 @@ export function AIDesignInput({ onDesignGenerated }) {
         </div>
       )}
 
-      {/* Rate Limit Info */}
-      <div className="text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 p-3 rounded">
-        <strong>Free Tier Limits:</strong> 10 requests/minute, 250 requests/day
-      </div>
 
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        loading={loading}
-        disabled={!userInput.trim()}
-        className="w-full"
-      >
-        {loading ? 'Generating with AI...' : 'Generate Design with AI'}
-      </Button>
 
       {/* Info */}
       <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">

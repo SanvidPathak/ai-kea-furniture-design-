@@ -68,14 +68,14 @@ const FURNITURE_DESIGN_SCHEMA = {
     },
     partitionStrategy: {
       type: 'string',
-      enum: ['none', 'all-shelves', 'random-shelves'],
-      description: 'Strategy for vertical partitions. Default to "none" unless explicitly requested. Use "all-shelves" or "random-shelves" only if user asks for partitions.'
+      enum: ['none', 'equal', 'ratio', 'random', 'all-shelves', 'random-shelves'],
+      description: 'Strategy for vertical partitions. Default to "none" (no partitions) unless explicitly requested.'
     },
     partitionRatio: {
       type: 'string',
-      description: 'Split ratio for partitions (e.g., "50-50", "30-70", "33-33-33"). Default is "50-50" (center).'
+      description: 'Split ratio string defining the relative or absolute size of compartments. Examples: "3:2:5", "1:2", "50-50", "30-70".'
     },
-    partitionCount: {
+    'partitionCount': {
       type: 'integer',
       description: 'Number of vertical partitions per shelf. Default is 1.'
     },
@@ -99,6 +99,16 @@ const FURNITURE_DESIGN_SCHEMA = {
       type: 'array',
       items: { type: 'string' },
       description: 'List of alerts/warnings about ambiguity or physical constraints to show the user.'
+    },
+    storageType: {
+      type: 'string',
+      enum: ['open-compartment'],
+      description: 'Type of storage. Note: Drawers are NOT supported. Default to "open-compartment".'
+    },
+    storageLocation: {
+      type: 'string',
+      enum: ['under-top', 'side-left', 'side-right'],
+      description: 'Location of the storage unit.'
     }
   },
   required: ['furnitureType', 'material', 'dimensions', 'materialColor', 'styleNotes', 'confidence', 'projectedLoad', 'partitionStrategy']
@@ -139,8 +149,20 @@ Materials: wood (#8B4513), metal (#2C2C2C), plastic (#FFFFFF).
       shelfModifiers: [{ "target": "top", "count": 2 }]
     - Target: "top", "bottom", "rest", "odd", "even", or index "1", "2"...
     - **Resolution Rule**: If a specific shelf matches multiple rules (e.g. "Range 1-3" and "Shelf 2"), you MUST output BOTH rules in the list. Do not try to merge or optimize them. The engine prioritizes specific targets (e.g. '2') over patterns (e.g. 'range').
+  - **Desk Storage**:
+    - "Partitions" refer to vertical dividers in the open storage.
+    - Default: 0 partitions (Open space).
+    - If user asks for "partitions" without number: Set \`partitionCount: 1\`, \`partitionStrategy: 'equal'\`.
+    - If user asks for specific number (e.g. "3 partitions"): Set \`partitionCount: 3\`, \`partitionStrategy: 'equal'\`.
+    - **Ratios**: If user specifies a ratio (e.g. "3:2:5" or "1 to 2"), set \`partitionRatio: "3:2:5"\` and \`partitionStrategy: 'ratio'\`. The \`partitionCount\` will be auto-calculated from the ratio.
+    - Support \`partitionStrategy: 'random'\`.
+  - **No Drawers Policy**:
+    - Drawers are **NOT** available.
+    - If user asks for "drawers", you must:
+      1. Set \`storageType\` to "open-compartment".
+      2. **Crucial**: Add a warning to \`warnings\`: "Drawers are not available. Replaced with open compartments."
   - **Ambiguity & Warnings**:
-    - If the user provides conflicting info (e.g. "ratio 1:2" implying 2 sections, but asks for "5 partitions"), prioritize the Ratio but ADD A WARNING to the \`warnings\` list explaining the conflict.
+    - If the design seems suspended/floating, default to standard legs.
     - If the design seems physically impossible (e.g. "100 shelves"), add a warning.
 
 JSON Examples:

@@ -39,6 +39,35 @@ export async function generateFromNaturalLanguage(userInput) {
       }
     }
 
+    // Manual Override: If user specifies explicit ratio pattern (e.g. "3:2:5"), force it.
+    // This bypasses AI potential misses.
+    const ratioMatch = userInput.match(/(\d+(?:[:\-\s]\d+)+)/);
+    // Matches "3:2", "3:2:5", "3-2-5", "3 2 5" (if valid numbers)
+    // We need to be careful not to match dates or times, but "digits-sep-digits" is strong signal here.
+    // Let's stick to colon/hyphen for strong signal, preventing false positives from dimensions "150 70".
+    const strongRatioMatch = userInput.match(/\b(\d+)(?::|-)(\d+)(?:(?::|-)(\d+))*\b/);
+
+    if (strongRatioMatch) {
+      // Reconstruct the matched string to "N:M:..." format for consistency
+      const parts = strongRatioMatch[0].split(/[:\-]/);
+      aiParams.partitionRatio = parts.join(':');
+      aiParams.partitionStrategy = 'ratio';
+      aiParams.partitionCount = parts.length - 1;
+      console.log('Manual Ratio Override applied:', aiParams.partitionRatio);
+    }
+
+    // Manual Override: Load Capacity
+    // If user says "1500kg" or "600 kg", force it.
+    const loadMatch = userInput.match(/(\d+)\s*(?:kg|kgs|kilograms)/i);
+    if (loadMatch) {
+      const loadVal = parseInt(loadMatch[1]);
+      if (!isNaN(loadVal) && loadVal > 0) {
+        aiParams.projectedLoad = loadVal;
+        console.log('Manual Load Override applied:', aiParams.projectedLoad);
+      }
+    }
+    console.log('HybridGenerator Final Load:', aiParams.projectedLoad);
+
     // Step 2: Generate design using existing deterministic algorithm
     const design = await generateDesign({
       furnitureType: aiParams.furnitureType,

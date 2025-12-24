@@ -288,10 +288,10 @@ function generateBookshelfParts(dimensions, material, color, engineeringSpecs) {
       material,
       color,
       meta: {
-        strategy: engineeringSpecs.partitionStrategy,
-        ratio: engineeringSpecs.partitionRatio,
-        count: engineeringSpecs.partitionCount,
-        modifiers: engineeringSpecs.shelfModifiers
+        strategy: engineeringSpecs && engineeringSpecs.partitionStrategy,
+        ratio: engineeringSpecs && engineeringSpecs.partitionRatio,
+        count: engineeringSpecs && engineeringSpecs['partitionCount'],
+        modifiers: engineeringSpecs && engineeringSpecs.shelfModifiers
       }
     }
   ];
@@ -312,41 +312,124 @@ function generateBookshelfParts(dimensions, material, color, engineeringSpecs) {
 
 /**
  * Generate parts for desk
+ * Updated: Supports 'open-compartment' (U-shape/Box) instead of drawers.
+ * Overhauled to fix syntax issues and ensure full-width storage logic.
  */
 function generateDeskParts(dimensions, material, color, engineeringSpecs) {
   const { length, width, height } = dimensions;
-  const { legSize, topThickness } = engineeringSpecs;
 
-  return [
-    {
-      id: 'desk-top',
-      name: 'Desk Top',
-      type: 'surface',
-      dimensions: { length, width, height: topThickness },
+  // Extract engineering specs safely
+  const legSize = engineeringSpecs.legSize || 4;
+  const topThickness = engineeringSpecs.topThickness || 2.5;
+  const storageType = engineeringSpecs.storageType || 'open-compartment';
+
+  // Partition Logic - Safe Extraction
+  console.log('DesignGenerator Desk Specs:', JSON.stringify(engineeringSpecs, null, 2));
+  let strategy = engineeringSpecs.partitionStrategy || 'none';
+  let pCount = engineeringSpecs.deskPartitionCount || 0;
+  const pRatio = engineeringSpecs.partitionRatio || 'equal';
+
+  // INTELLIGENT INFERENCE: If a specific ratio is provided, it overrides strategy/count
+  if (pRatio && typeof pRatio === 'string' && pRatio !== 'equal' && pRatio !== 'random') {
+    // Check if ratio implies multiple segments (e.g. "3:2:5")
+    const segments = pRatio.split(/[:,\-\s]+/).filter(s => !isNaN(parseFloat(s)));
+    if (segments.length > 1) {
+      pCount = segments.length - 1;
+      strategy = 'ratio'; // Force ratio strategy
+    }
+  }
+
+  // STRICT GUARD: If strategy is 'none', force count to 0, UNLESS count > 0 is explicitly extracted or inferred.
+  if (strategy === 'none') {
+    if (pCount > 0) {
+      // User asked for N partitions but didn't specify strategy -> Default to Equal.
+      // We do NOT reset pCount.
+    } else {
+      pCount = 0;
+    }
+  }
+
+  // Random Strategy Handling
+  if (strategy === 'random' || strategy === 'random-shelves') {
+    pCount = Math.floor(Math.random() * 3) + 1; // 1 to 3 partitions
+  }
+
+  // Storage Configuration
+  const storageHeight = 15; // cm
+  const storageDepth = width; // Full depth (same as desk top) for seamless look
+  const openStorage = (storageType === 'open-compartment' || storageType === 'drawer');
+
+  // Gap Fix: Small overlap to merge geometries
+  const overlap = 0.2;
+
+  // Leg Height Calculation
+  // If storage is present, legs go UNDER the storage unit.
+  const effectiveLegHeight = openStorage
+    ? height - topThickness - storageHeight + overlap
+    : height - topThickness;
+
+  const parts = [];
+
+  // 1. Desk Top
+  parts.push({
+    id: 'desk-top',
+    name: 'Desk Top',
+    type: 'surface',
+    dimensions: { length, width, height: topThickness },
+    quantity: 1,
+    material,
+    color,
+  });
+
+  // 2. Legs
+  parts.push({
+    id: 'desk-leg',
+    name: 'Desk Leg',
+    type: 'support',
+    dimensions: { length: legSize, width: legSize, height: effectiveLegHeight },
+    quantity: 4,
+    anchorPattern: 'corners', // Standard corner placement works because storage is full width
+    material,
+    color,
+    meta: {
+      // No special offsets needed for full-span storage
+    }
+  });
+
+  // 3. Storage Unit (The "Apron")
+  if (openStorage) {
+    // Calculate Structural Thickness based on Load
+    // Base: 1.5cm. Heavy loads require thicker partitions/walls.
+    const load = engineeringSpecs.distributedLoad || 50;
+    let wallThick = 1.5;
+    if (load > 1000) wallThick = 5.0; // Industrial
+    else if (load > 500) wallThick = 3.5; // Heavy Duty
+    else if (load > 200) wallThick = 2.5; // Sturdy
+
+    parts.push({
+      id: 'desk-storage-unit',
+      name: 'Open Storage',
+      type: 'storage', // Logical type
+      dimensions: { length: length, width: storageDepth, height: storageHeight },
       quantity: 1,
       material,
       color,
-    },
-    {
-      id: 'desk-drawer',
-      name: 'Drawer',
-      type: 'storage',
-      dimensions: { length: length * 0.3, width: width * 0.8, height: 15 },
-      quantity: 2,
-      material,
-      color,
-    },
-    {
-      id: 'desk-leg',
-      name: 'Desk Leg',
-      type: 'support',
-      dimensions: { length: legSize, width: legSize, height: height - topThickness },
-      quantity: 4,
-      anchorPattern: 'corners',
-      material,
-      color,
-    },
-  ];
+      meta: {
+        isOpen: true,
+        hasBack: true,
+        fullSpan: true, // Signals single unit spanning full width
+        topThickness: topThickness,
+        verticalOverlap: overlap,
+        wallThickness: wallThick, // Structural thickness
+        // Partition Metadata (Aligned with Bookshelf Logic)
+        partitionStrategy: strategy,
+        partitionRatio: pRatio,
+        partitionCount: pCount
+      }
+    });
+  }
+
+  return parts;
 }
 
 /**
@@ -596,7 +679,7 @@ export async function generateDesign(config) {
   const { legSize, topThickness, additions, loadAnalysis } = specs;
 
   // Extract for validation phase
-  const distributedLoad = loadAnalysis.expectedLoad?.distributed || 50;
+  const distributedLoad = config.projectedLoad || loadAnalysis.expectedLoad?.distributed || 50;
 
   const engineeringSpecs = {
     legSize,
@@ -605,9 +688,13 @@ export async function generateDesign(config) {
     hasArmrests, // Pass this flag to part generators
     shelves: specs.shelves, // Pass shelves count
     partitionStrategy: specs.partitionStrategy, // Pass partition strategy
-    partitionRatio: specs.partitionRatio, // Pass partition ratio
-    partitionCount: specs.partitionCount, // Pass partition count
-    shelfModifiers: specs.shelfModifiers // Pass modifiers
+    distributedLoad: distributedLoad, // Pass load for structural sizing
+    partitionRatio: specs.partitionRatio, // 60-40, etc.
+    partitionCount: specs['partitionCount'], // Pass partition count
+    deskPartitionCount: specs['partitionCount'], // Alias for desk safety
+    shelfModifiers: specs.shelfModifiers, // Pass modifiers
+    storageType: config.storageType || 'open-compartment',
+    storageLocation: config.storageLocation || 'under-top'
   };
 
   // Generate parts based on furniture type + engineering specs
@@ -695,20 +782,33 @@ export async function generateDesign(config) {
 
   // --- BOM CORRECTION PHASE ---
   // Recalculate quantities based on actual 3D parts generated
-  const partCounts = {};
+  // Strategy: Group by "Name", but also verify dimensions match for accuracy.
+  // For simplicity and to match the visual name, we group by Name.
+
+  const aggregatedParts = new Map();
+
   positionedParts.forEach(p => {
-    // Normalize name or ID to group properly.
-    // If ID is unique (e.g. leg-1), group by Name.
-    // Assuming design.parts has the canonical names.
+    // Normalizing Key
     const key = p.name;
-    partCounts[key] = (partCounts[key] || 0) + 1;
+
+    if (aggregatedParts.has(key)) {
+      const entry = aggregatedParts.get(key);
+      entry.quantity += 1;
+    } else {
+      // Create new entry based on this part instance
+      // We strip the specific ID/Position to make it generic
+      const genericPart = { ...p, quantity: 1 };
+      delete genericPart.position; // Remove specific position
+      delete genericPart.id;       // Remove instance ID
+      // Assign a generic ID for the list
+      genericPart.id = p.name.toLowerCase().replace(/\s+/g, '-');
+
+      aggregatedParts.set(key, genericPart);
+    }
   });
 
-  // Update design.parts with actual counts
-  const correctedParts = design.parts.map(originalPart => {
-    const actualCount = partCounts[originalPart.name] || 0;
-    return { ...originalPart, quantity: actualCount };
-  }).filter(p => p.quantity > 0); // Remove parts that were optimized away (e.g. 0 partitions)
+  // Convert map back to array
+  const correctedParts = Array.from(aggregatedParts.values());
 
   const geometry3D = generateThreeJSGeometry({
     ...design,
@@ -717,7 +817,7 @@ export async function generateDesign(config) {
 
   return {
     ...design,
-    parts: correctedParts, // Use corrected BOM
+    parts: correctedParts, // Use corrected BOM from 3D
     warnings: finalWarnings, // Override with full list
     geometry: geometry3D
   };

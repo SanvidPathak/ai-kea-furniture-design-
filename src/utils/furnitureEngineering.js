@@ -329,9 +329,12 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
             const pWid = safeNum(part.dimensions.width);
             const pHei = safeNum(part.dimensions.height);
 
-            const inset = 2;
-            const halfL = (length / 2) - (pLen / 2) - inset;
-            const halfW = (width / 2) - (pWid / 2) - inset;
+            const defaultInset = 2;
+            const insetX = (part.meta && part.meta.insetX !== undefined) ? part.meta.insetX : defaultInset;
+            const insetZ = (part.meta && part.meta.insetZ !== undefined) ? part.meta.insetZ : defaultInset;
+
+            const halfL = (length / 2) - (pLen / 2) - insetX;
+            const halfW = (width / 2) - (pWid / 2) - insetZ;
 
             const corners = [
                 { x: halfL, z: halfW },
@@ -794,23 +797,202 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
                 position: { x: 0, y: safeNum(part.dimensions.height) / 2, z: (dimensions.width / 2) - (pThick / 2) }
             });
         }
-        // SPECIAL: Desk Drawer
-        else if (part.name.toLowerCase().includes('drawer')) {
-            const drawerWidth = safeNum(part.dimensions.length); // X-Width
-            const drawerHeight = safeNum(part.dimensions.height); // Y-Height
+        // SPECIAL: Desk Storage (Open Compartments or Drawers)
+        else if (part.name === 'Open Storage' || part.name.toLowerCase().includes('drawer')) { // Fallback support
+            const uWidth = safeNum(part.dimensions.length); // X-Width
+            const uDepth = safeNum(part.dimensions.width);  // Z-Depth
+            let uHeight = safeNum(part.dimensions.height); // Y-Height
+            const pThick = part.meta?.wallThickness || 1.5; // Panel thickness (Dynamic based on load)
+            console.log(`FurnitureEngineering Storage Thickness: ${pThick} (Source Meta: ${part.meta?.wallThickness})`);
+
+            // Compensation: If heavier walls, grow downwards to preserve internal volume
+            if (pThick > 1.5) {
+                const extra = pThick - 1.5;
+                uHeight += extra;
+                // yPos calc below automatically centers this new height, effectively growing down
+            }
 
             // Position under the top
-            // Top Thickness is hard to guess here without context, assume 3
-            const topThick = 3;
-            const yPos = dimensions.height - topThick - (drawerHeight / 2) - 1; // 1cm gap
+            const topThick = (part.meta && part.meta.topThickness !== undefined) ? part.meta.topThickness : 3;
+            // Overlap Nudge
+            const nudge = part.meta?.verticalOverlap || 0;
+            const yPos = dimensions.height - topThick - (uHeight / 2) + nudge; // Force Overlap
 
-            if (qty === 2) {
-                // Distribute Left/Right
-                const offset = dimensions.length / 4;
-                explodedParts.push({ ...part, id: part.id + '-1', quantity: 1, position: { x: -offset, y: yPos, z: 0 } });
-                explodedParts.push({ ...part, id: part.id + '-2', quantity: 1, position: { x: offset, y: yPos, z: 0 } });
-            } else {
-                explodedParts.push({ ...part, quantity: 1, position: { x: 0, y: yPos, z: 0 } });
+            // Calculate centers for N units
+            const positions = [];
+
+            // EXPLODE into Panels
+            // Case 1: Single Full-Span Unit (Continuous)
+            if (qty === 1 && part.meta?.fullSpan) {
+                const pos = { x: 0, y: yPos, z: 0 };
+                const suffix = '-main';
+
+                // CABINET JOINERY LOGIC
+                // Prevent overlaps by subtracting dimensions
+                // 1. Bottom Panel (Base) - Full Dimensions
+                explodedParts.push({
+                    ...part, id: part.id + suffix + '-bot', name: 'Compartment Bottom', type: 'surface',
+                    dimensions: { length: uWidth, width: uDepth, height: pThick },
+                    quantity: 1,
+                    position: { x: pos.x, y: pos.y - (uHeight / 2) + (pThick / 2), z: pos.z }
+                });
+
+                // Common Dimensions for Uprights (sitting on bottom)
+                const uprightHeight = uHeight - pThick;
+                const uprightY = pos.y + (pThick / 2); // Shifted up by half thickness
+
+                // 2. Back Panel (Sits on Bottom, Full Width)
+                // Position: Rear of box. 
+                // Z = Center - (Depth/2) + (Thick/2)
+                const backZ = pos.z - (uDepth / 2) + (pThick / 2);
+
+                if (part.meta?.hasBack) {
+                    explodedParts.push({
+                        ...part, id: part.id + suffix + '-back', name: 'Compartment Back', type: 'surface',
+                        dimensions: { length: uWidth, width: pThick, height: uprightHeight },
+                        quantity: 1,
+                        position: { x: pos.x, y: uprightY, z: backZ }
+                    });
+                }
+
+                // Common Dimensions for Sides (Sit on Bottom, In front of Back)
+                // Width (Depth) = uDepth - BackThickness (if Back exists)
+                const internalDepth = part.meta?.hasBack ? uDepth - pThick : uDepth;
+                // Z Center = Center of remaining space.
+                // Space starts at BackZ + BackThick/2 = RearEdge + BackThick.
+                // RearEdge = Center - Depth/2.
+                // Start Z = (Center - Depth/2) + pThick.
+                // End Z = Center + Depth/2.
+                // Midpoint = (Start + End) / 2 = (2*Center + pThick) / 2 = Center + pThick/2.
+                const sideZ = pos.z + (pThick / 2);
+
+                // 3. Left Panel (End)
+                explodedParts.push({
+                    ...part, id: part.id + suffix + '-L', name: 'Compartment Side', type: 'surface',
+                    dimensions: { length: pThick, width: internalDepth, height: uprightHeight },
+                    quantity: 1,
+                    // Left edge: -Width/2 + Thick/2
+                    position: { x: pos.x - (uWidth / 2) + (pThick / 2), y: uprightY, z: sideZ }
+                });
+
+                // 4. Right Panel (End)
+                explodedParts.push({
+                    ...part, id: part.id + suffix + '-R', name: 'Compartment Side', type: 'surface',
+                    dimensions: { length: pThick, width: internalDepth, height: uprightHeight },
+                    quantity: 1,
+                    // Right edge
+                    position: { x: pos.x + (uWidth / 2) - (pThick / 2), y: uprightY, z: sideZ }
+                });
+
+                // 5. Dynamic Dividers (Enhanced Logic borrowed from Bookshelf)
+                const metaCount = part.meta?.['partitionCount'] || 0;
+                const metaRatio = part.meta?.partitionRatio;
+                const metaStrategy = part.meta?.partitionStrategy;
+
+                let numDividers = metaCount;
+                let cuts = [];
+
+                // A. Ratio Resolution
+                // A. Ratio Resolution (Robust Overhaul)
+                let ratioSegments = [];
+                // Allow : - , or space as separators
+                if (metaRatio && typeof metaRatio === 'string' && metaRatio !== 'equal' && metaRatio !== 'random') {
+                    ratioSegments = metaRatio.split(/[:,\-\s]+/)
+                        .map(s => s.trim())
+                        .map(Number)
+                        .filter(n => !isNaN(n) && n > 0);
+                }
+
+                // Logic: Ratio overrides explicit count if present
+                if (ratioSegments.length > 1) {
+                    numDividers = ratioSegments.length - 1;
+
+                    // Calculate strict cuts
+                    const totalRatio = ratioSegments.reduce((a, b) => a + b, 0);
+                    let currentPos = 0;
+                    for (let i = 0; i < ratioSegments.length - 1; i++) {
+                        currentPos += ratioSegments[i];
+                        cuts.push(currentPos / totalRatio);
+                    }
+                } else {
+                    // Logic: Equal Spacing based on Count
+                    // If strategy was random, pCount is already randomized by generator
+                    for (let i = 0; i < numDividers; i++) {
+                        cuts.push((i + 1) / (numDividers + 1));
+                    }
+                }
+
+                // Crowding Check (Safety)
+                // Dividers take physical space. Only place if width allows.
+                // Assuming divider thickness ~ pThick
+                if (numDividers > 0 && numDividers * pThick > uWidth * 0.4) {
+                    console.warn(`[FurnitureEngineering] Desk partition crowding. ${numDividers} dividers in ${uWidth}cm width.`);
+                    // Fallback to 0 to prevent geometry explosion
+                    cuts = [];
+                }
+
+                // Generate Geometry
+                cuts.forEach((cutPct) => {
+                    // StartEdge = -uWidth / 2
+                    const xPos = (-uWidth / 2) + (uWidth * cutPct);
+                    explodedParts.push({
+                        ...part, id: part.id + suffix + '-div-' + xPos.toFixed(1), name: 'Compartment Divider', type: 'surface',
+                        dimensions: { length: pThick, width: internalDepth, height: uprightHeight },
+                        quantity: 1,
+                        position: { x: pos.x + xPos, y: uprightY, z: sideZ }
+                    });
+                });
+
+            }
+            // Case 2: Standard/Split Units
+            else {
+                if (qty === 2) {
+                    // Standard Gapped or Split
+                    const offset = dimensions.length / 4;
+                    positions.push({ x: -offset, y: yPos, z: 0 }); // Left
+                    positions.push({ x: offset, y: yPos, z: 0 });  // Right
+                } else {
+                    positions.push({ x: 0, y: yPos, z: 0 });
+                }
+
+                // Standard Explosion Loop
+                positions.forEach((pos, idx) => {
+                    const suffix = `-${idx + 1}`;
+                    // ... (rest of standard logic) ...
+                    // 1. Bottom Panel
+                    explodedParts.push({
+                        ...part, id: part.id + suffix + '-bot', name: 'Compartment Bottom', type: 'surface',
+                        dimensions: { length: uWidth, width: uDepth, height: pThick },
+                        quantity: 1,
+                        position: { x: pos.x, y: pos.y - (uHeight / 2) + (pThick / 2), z: pos.z }
+                    });
+
+                    // 2. Left Panel
+                    explodedParts.push({
+                        ...part, id: part.id + suffix + '-L', name: 'Compartment Side', type: 'surface',
+                        dimensions: { length: pThick, width: uDepth, height: uHeight },
+                        quantity: 1,
+                        position: { x: pos.x - (uWidth / 2) + (pThick / 2), y: pos.y, z: pos.z }
+                    });
+
+                    // 3. Right Panel
+                    explodedParts.push({
+                        ...part, id: part.id + suffix + '-R', name: 'Compartment Side', type: 'surface',
+                        dimensions: { length: pThick, width: uDepth, height: uHeight },
+                        quantity: 1,
+                        position: { x: pos.x + (uWidth / 2) - (pThick / 2), y: pos.y, z: pos.z }
+                    });
+
+                    // 4. Back Panel
+                    if (part.meta?.hasBack) {
+                        explodedParts.push({
+                            ...part, id: part.id + suffix + '-back', name: 'Compartment Back', type: 'surface',
+                            dimensions: { length: uWidth, width: pThick, height: uHeight },
+                            quantity: 1,
+                            position: { x: pos.x, y: pos.y, z: pos.z - (uDepth / 2) + (pThick / 2) }
+                        });
+                    }
+                });
             }
         }
         // SPECIAL: Bookshelf Top Panel
@@ -964,7 +1146,7 @@ export async function generateEngineeringSpecs(config) {
         shelves: config.shelves,
         partitionStrategy: config.partitionStrategy,
         partitionRatio: config.partitionRatio, // 60-40 split etc.
-        partitionCount: config.partitionCount, // Explicit count
+        ['partitionCount']: config.partitionCount, // Explicit count
         shelfModifiers: config.shelfModifiers || [], // Per-shelf overrides
         // Helper metadata
         engineeringNotes: [
