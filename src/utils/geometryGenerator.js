@@ -18,7 +18,11 @@ export function generateThreeJSGeometry(design) {
     const geometryParts = parts.map((part, index) => {
         // Use explicit position from engineering engine
         // Fallback to center if missing (shouldn't happen with new engine)
-        const position = part.position || { x: 0, y: safeNum(dimensions.height) / 2, z: 0 };
+        // GLOBAL FIX: Shift ALL geometry UP by H/2 to sit on Floor (Y=0) instead of being centered on (0,0,0)
+        let position = part.position || { x: 0, y: safeNum(dimensions.height) / 2, z: 0 };
+
+        // Apply Global Lift
+        position = { ...position, y: position.y + (safeNum(dimensions.height) / 2) };
 
         // Use explicit rotation if provided (e.g. for Aprons), else calculate default
         const rotation = part.rotation || calculatePartRotation(part, furnitureType);

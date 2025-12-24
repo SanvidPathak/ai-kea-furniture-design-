@@ -109,6 +109,19 @@ const FURNITURE_DESIGN_SCHEMA = {
       type: 'string',
       enum: ['under-top', 'side-left', 'side-right'],
       description: 'Location of the storage unit.'
+    },
+    sideStorage: {
+      type: 'string',
+      enum: ['none', 'left', 'right', 'both'],
+      description: 'Vertical storage compartments replacing legs on either side. Can be used IN ADDITION to storageLocation (under-top).'
+    },
+    sideShelves: {
+      type: 'object',
+      properties: {
+        left: { type: 'integer', description: 'Number of shelves for left side storage. Default 2.' },
+        right: { type: 'integer', description: 'Number of shelves for right side storage. Default 2.' }
+      },
+      description: 'Specific shelf counts for side storage units.'
     }
   },
   required: ['furnitureType', 'material', 'dimensions', 'materialColor', 'styleNotes', 'confidence', 'projectedLoad', 'partitionStrategy']
@@ -153,9 +166,20 @@ Materials: wood (#8B4513), metal (#2C2C2C), plastic (#FFFFFF).
     - "Partitions" refer to vertical dividers in the open storage.
     - Default: 0 partitions (Open space).
     - If user asks for "partitions" without number: Set \`partitionCount: 1\`, \`partitionStrategy: 'equal'\`.
-    - If user asks for specific number (e.g. "3 partitions"): Set \`partitionCount: 3\`, \`partitionStrategy: 'equal'\`.
+    - If user asks for specific number (e.g. "1 partition"): Set \`partitionCount: 1\`, \`partitionStrategy: 'equal'\`.
+    - CRITICAL: If partitionCount > 0, you MUST set partitionStrategy to 'equal' (or 'ratio'). Never leave it as 'none'.
     - **Ratios**: If user specifies a ratio (e.g. "3:2:5" or "1 to 2"), set \`partitionRatio: "3:2:5"\` and \`partitionStrategy: 'ratio'\`. The \`partitionCount\` will be auto-calculated from the ratio.
     - Support \`partitionStrategy: 'random'\`.
+  - **Desk Side Storage (Vertical Towers)**:
+    - Keywords: "vertical compartments", "tower", "shelf on left", "storage on right", "side shelves", "bookcase desk".
+    - Action: Set \`sideStorage\` to 'left', 'right', or 'both'.
+    - **Shelf Count**: If user says "3 shelves on left", set \`sideShelves: { left: 3 }\`. Default is 2.
+    - **CRITICAL SEMANTIC RULE**: For Desks:
+      - "Shelves" always implies **Side Storage**.
+      - "Partitions" always implies **Under-Desk Storage**.
+      - Example: "Desk with 3 shelves" -> Side Storage with 3 shelves. (NOT partitions).
+      - Example: "Desk with 3 partitions" -> Under-Desk Storage with 3 dividers. (NOT towers).
+    - If side storage is present, \`partitionCount\` (under-desk) usually defaults to 0 unless explicitly asked for (e.g. "side tower AND drawers under desk").
   - **No Drawers Policy**:
     - Drawers are **NOT** available.
     - If user asks for "drawers", you must:
@@ -281,6 +305,8 @@ export async function parseNaturalLanguage(userInput) {
       partitionCount: result.partitionCount,
       shelfCount: result.shelfCount,
       shelfModifiers: result.shelfModifiers,
+      sideStorage: result.sideStorage,
+      sideShelves: result.sideShelves,
       warnings: (() => {
         const warnings = result.warnings || [];
         // ambiguity validation logic

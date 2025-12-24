@@ -83,6 +83,8 @@ export async function generateFromNaturalLanguage(userInput) {
       partitionCount: aiParams.partitionCount, // Number of partitions per shelf
       shelves: aiParams.shelfCount, // Pass horizontal shelf count
       shelfModifiers: aiParams.shelfModifiers || [], // Per-shelf overrides
+      sideStorage: aiParams.sideStorage,
+      sideShelves: aiParams.sideShelves,
     });
 
     // Step 3: Enhance with AI metadata

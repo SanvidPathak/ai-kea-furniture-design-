@@ -326,7 +326,7 @@ function generateDeskParts(dimensions, material, color, engineeringSpecs) {
   // Partition Logic - Safe Extraction
   console.log('DesignGenerator Desk Specs:', JSON.stringify(engineeringSpecs, null, 2));
   let strategy = engineeringSpecs.partitionStrategy || 'none';
-  let pCount = engineeringSpecs.deskPartitionCount || 0;
+  let pCount = engineeringSpecs.deskPartitionCount || engineeringSpecs.partitionCount || 0;
   const pRatio = engineeringSpecs.partitionRatio || 'equal';
 
   // INTELLIGENT INFERENCE: If a specific ratio is provided, it overrides strategy/count
@@ -342,89 +342,226 @@ function generateDeskParts(dimensions, material, color, engineeringSpecs) {
   // STRICT GUARD: If strategy is 'none', force count to 0, UNLESS count > 0 is explicitly extracted or inferred.
   if (strategy === 'none') {
     if (pCount > 0) {
-      // User asked for N partitions but didn't specify strategy -> Default to Equal.
-      // We do NOT reset pCount.
+      // User asked for N partitions but didn't specify strategy -> Force Equal
+      console.log(`[DesignGenerator] auto-enforcing 'equal' strategy for ${pCount} partitions.`);
+      strategy = 'equal';
     } else {
       pCount = 0;
     }
   }
 
+  // Output for debugging
+  // console.log(`[DesignGenerator] Partition Logic Resolved: Strategy=${strategy}, Count=${pCount}, Ratio=${pRatio}`);
+
   // Random Strategy Handling
+
   if (strategy === 'random' || strategy === 'random-shelves') {
     pCount = Math.floor(Math.random() * 3) + 1; // 1 to 3 partitions
   }
 
+  // --- SIDE STORAGE LOGIC (V2) ---
+  const sideStorage = engineeringSpecs.sideStorage || 'none';
+  const sideShelves = engineeringSpecs.sideShelves || { left: 2, right: 2 };
+
+  // Constraints
+  const MIN_LEG_SPACE = 60; // Ergonomic standard
+  const MAX_SIDE_UNIT_RATIO = 0.33; // Max 1/3 desk width per unit
+
+  // Determine Side Units
+  const hasLeftStorage = (sideStorage === 'left' || sideStorage === 'both');
+  const hasRightStorage = (sideStorage === 'right' || sideStorage === 'both');
+
+  // Calculate Unit Widths
+  let sideUnitWidth = 0;
+  if (hasLeftStorage || hasRightStorage) {
+    sideUnitWidth = Math.min(40, width * MAX_SIDE_UNIT_RATIO); // Cap at 40cm or 30% width
+  }
+
+  // Calculate Total Occupied Width
+  const leftOccupied = hasLeftStorage ? sideUnitWidth : 0;
+  const rightOccupied = hasRightStorage ? sideUnitWidth : 0;
+  const totalOccupied = leftOccupied + rightOccupied;
+
+  // Check Leg Space & Resize if needed
+  let finalLength = length;
+  let legSpace = finalLength - totalOccupied;
+
+  if (legSpace < MIN_LEG_SPACE) {
+    // Auto-Expand
+    const needed = MIN_LEG_SPACE + totalOccupied;
+    console.log(`[DesignGenerator] Auto-expanding desk from ${length} to ${needed}cm for leg space.`);
+    finalLength = needed;
+    legSpace = MIN_LEG_SPACE;
+  }
+
   // Storage Configuration
   const storageHeight = 15; // cm
-  const storageDepth = width; // Full depth (same as desk top) for seamless look
+  const storageDepth = width; // Full depth
   const openStorage = (storageType === 'open-compartment' || storageType === 'drawer');
+
+  // Adjust Storage (Apron) Dimensions
+  // Strategy: Dynamic Fill.
+  // If Side Storage exists, Apron fills the remaining space.
+  // If No Side Storage, Apron spans full width (Floating Box style).
+
+  const apronLeftX = hasLeftStorage ? (-finalLength / 2 + sideUnitWidth) : (-finalLength / 2);
+  const apronRightX = hasRightStorage ? (finalLength / 2 - sideUnitWidth) : (finalLength / 2);
+
+  const apronWidth = apronRightX - apronLeftX;
+  const apronCenterX = apronLeftX + (apronWidth / 2);
+
+  // Constraint: Disable partitions in under-desk unit if Double Side Storage
+  if (sideStorage === 'both') {
+    strategy = 'none';
+    pCount = 0;
+    console.log('[DesignGenerator] Double side storage detected. Disabling under-desk partitions.');
+  }
 
   // Gap Fix: Small overlap to merge geometries
   const overlap = 0.2;
 
   // Leg Height Calculation
-  // If storage is present, legs go UNDER the storage unit.
   const effectiveLegHeight = openStorage
     ? height - topThickness - storageHeight + overlap
     : height - topThickness;
 
+  // --- MODULAR BUILD PROCESS (V3) ---
   const parts = [];
 
-  // 1. Desk Top
+  // MODULE 1: DESK TOP (Always present)
+  // Position: TOP aligned. Center = H/2 - Thickness/2.
+  const topY = (height / 2) - (topThickness / 2);
+
   parts.push({
     id: 'desk-top',
     name: 'Desk Top',
     type: 'surface',
-    dimensions: { length, width, height: topThickness },
+    dimensions: { length: finalLength, width, height: topThickness },
     quantity: 1,
+    position: { x: 0, y: topY, z: 0 }, // Explicit Position
     material,
     color,
   });
 
-  // 2. Legs
-  parts.push({
-    id: 'desk-leg',
-    name: 'Desk Leg',
-    type: 'support',
-    dimensions: { length: legSize, width: legSize, height: effectiveLegHeight },
-    quantity: 4,
-    anchorPattern: 'corners', // Standard corner placement works because storage is full width
-    material,
-    color,
-    meta: {
-      // No special offsets needed for full-span storage
-    }
-  });
+  // Calculate Side Storage Y
+  // Anchor: Floor (-H/2). Height = H - Top.
+  // Center Y = -H/2 + UnitHeight/2.
+  const sideUnitHeight = height - topThickness;
+  const sideStorageY = (-height / 2) + (sideUnitHeight / 2);
 
-  // 3. Storage Unit (The "Apron")
+  // Calculate Structural Thickness based on Load (Global)
+  const load = engineeringSpecs.distributedLoad || 50;
+  let wallThick = 1.5;
+  if (load > 1000) wallThick = 5.0;
+  else if (load > 500) wallThick = 3.5;
+  else if (load > 200) wallThick = 2.5;
+
+  if (hasLeftStorage) {
+    parts.push({
+      id: 'side-storage-left',
+      name: 'Side Storage Unit (Left)',
+      type: 'complex',
+      dimensions: { length: sideUnitWidth, width: width, height: sideUnitHeight },
+      position: { x: (-finalLength / 2) + (sideUnitWidth / 2), y: sideStorageY, z: 0 },
+      material, color,
+      quantity: 1,
+      meta: {
+        subtype: 'vertical-storage',
+        shelfCount: sideShelves.left,
+        topThickness: topThickness,
+        fullSpan: true,
+        hasBack: true,
+        wallThickness: wallThick, // Structural Walls scale with Load
+        shelfThickness: 1.5       // Shelves stay thin
+      }
+    });
+  }
+
+  if (hasRightStorage) {
+    parts.push({
+      id: 'side-storage-right',
+      name: 'Side Storage Unit (Right)',
+      type: 'complex',
+      dimensions: { length: sideUnitWidth, width: width, height: sideUnitHeight },
+      position: { x: (finalLength / 2) - (sideUnitWidth / 2), y: sideStorageY, z: 0 },
+      material, color,
+      quantity: 1,
+      meta: {
+        subtype: 'vertical-storage',
+        shelfCount: sideShelves.right,
+        topThickness: topThickness,
+        fullSpan: true,
+        hasBack: true,
+        wallThickness: wallThick, // Structural Walls scale with Load
+        shelfThickness: 1.5       // Shelves stay thin
+      }
+    });
+  }
+
+  // MODULE 3: LEGS (Conditional)
+  const addLegs = (side) => {
+    const inset = openStorage ? legSize : 0;
+    const xOffset = (finalLength / 2) - (legSize / 2) - inset;
+    const isLeft = side === 'left';
+    const xPos = isLeft ? -xOffset : xOffset;
+
+    // Anchor: Floor (-H/2). Height = effectiveLegHeight.
+    // Center Y = -H/2 + LegHeight/2.
+    const legY = (-height / 2) + (effectiveLegHeight / 2);
+
+    [-1, 1].forEach(zDir => {
+      const zPos = zDir * ((width / 2) - (legSize / 2));
+      parts.push({
+        id: `leg-${side}-${zDir}`,
+        name: `Leg ${side} ${zDir > 0 ? 'Back' : 'Front'}`,
+        type: 'support',
+        dimensions: { length: legSize, width: legSize, height: effectiveLegHeight },
+        quantity: 1,
+        position: { x: xPos, y: legY, z: zPos },
+        material, color
+      });
+    });
+  };
+
+  if (!hasLeftStorage) addLegs('left');
+  if (!hasRightStorage) addLegs('right');
+
+  // MODULE 4: CENTRAL STORAGE
   if (openStorage) {
-    // Calculate Structural Thickness based on Load
-    // Base: 1.5cm. Heavy loads require thicker partitions/walls.
     const load = engineeringSpecs.distributedLoad || 50;
     let wallThick = 1.5;
-    if (load > 1000) wallThick = 5.0; // Industrial
-    else if (load > 500) wallThick = 3.5; // Heavy Duty
-    else if (load > 200) wallThick = 2.5; // Sturdy
+    if (load > 1000) wallThick = 5.0;
+    else if (load > 500) wallThick = 3.5;
+    else if (load > 200) wallThick = 2.5;
+
+    // Position: Under Top. 
+    // Anchor: Top Edge = (H/2) - TopThickness.
+    // Center Y = TopEdge - (StorageHeight/2) + Overlap.
+    const apronY = (height / 2) - topThickness - (storageHeight / 2) + overlap;
 
     parts.push({
       id: 'desk-storage-unit',
       name: 'Open Storage',
-      type: 'storage', // Logical type
-      dimensions: { length: length, width: storageDepth, height: storageHeight },
+      type: 'storage',
+      dimensions: { length: apronWidth, width: storageDepth, height: storageHeight },
       quantity: 1,
+      anchorPattern: 'under-top',
+      position: { x: apronCenterX, y: apronY, z: 0 },
       material,
       color,
       meta: {
+        subtype: 'under-desk-storage',
         isOpen: true,
         hasBack: true,
-        fullSpan: true, // Signals single unit spanning full width
+        fullSpan: true,
+        suppressLeft: hasLeftStorage,
+        suppressRight: hasRightStorage,
         topThickness: topThickness,
         verticalOverlap: overlap,
-        wallThickness: wallThick, // Structural thickness
-        // Partition Metadata (Aligned with Bookshelf Logic)
+        wallThickness: wallThick,
         partitionStrategy: strategy,
         partitionRatio: pRatio,
-        partitionCount: pCount
+        partitionCount: pCount // 1
       }
     });
   }
@@ -525,8 +662,15 @@ export function calculateTotalCost(parts, material) {
   let totalCost = 0;
 
   parts.forEach(part => {
-    const volume = calculateVolume(part.dimensions);
+    let volume = calculateVolume(part.dimensions);
+    if (isNaN(volume)) {
+      console.warn(`[CostCalc] Invalid dimensions for part ${part.name} (ID: ${part.id}). Dims:`, part.dimensions);
+      volume = 0;
+    }
     const partCost = volume * materialProps.cost * part.quantity;
+    if (isNaN(partCost)) {
+      console.error(`[CostCalc] NaN Cost for ${part.name}: Vol=${volume}, Cost=${materialProps.cost}, Qty=${part.quantity}`);
+    }
     totalCost += partCost;
   });
 
@@ -689,12 +833,14 @@ export async function generateDesign(config) {
     shelves: specs.shelves, // Pass shelves count
     partitionStrategy: specs.partitionStrategy, // Pass partition strategy
     distributedLoad: distributedLoad, // Pass load for structural sizing
-    partitionRatio: specs.partitionRatio, // 60-40, etc.
-    partitionCount: specs['partitionCount'], // Pass partition count
-    deskPartitionCount: specs['partitionCount'], // Alias for desk safety
+    partitionRatio: config.partitionRatio || specs.partitionRatio, // 60-40, etc.
+    partitionCount: config.partitionCount || specs.partitionCount, // Pass partition count directly from config
+    deskPartitionCount: config.partitionCount || specs.partitionCount, // Alias for desk safety
     shelfModifiers: specs.shelfModifiers, // Pass modifiers
     storageType: config.storageType || 'open-compartment',
-    storageLocation: config.storageLocation || 'under-top'
+    storageLocation: config.storageLocation || 'under-top',
+    sideStorage: config.sideStorage,
+    sideShelves: config.sideShelves
   };
 
   // Generate parts based on furniture type + engineering specs
