@@ -11,7 +11,9 @@
 
 import { generateDesign } from './designGenerator.js';
 import { isNaturalLanguageInput } from './aiDesignParser.js';
-import { parseNaturalLanguage } from './apiClient.js';
+// Switch to Client-Side parsing to bypass Backend "Model Not Found" error
+import { parseNaturalLanguage } from './aiDesignParser.js';
+// import { parseNaturalLanguage } from './apiClient.js';
 import { isGeminiConfigured } from './geminiService.js';
 
 /**
