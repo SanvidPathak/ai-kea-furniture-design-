@@ -374,7 +374,23 @@ function generateDeskParts(dimensions, material, color, engineeringSpecs) {
   // Calculate Unit Widths
   let sideUnitWidth = 0;
   if (hasLeftStorage || hasRightStorage) {
-    sideUnitWidth = Math.min(40, width * MAX_SIDE_UNIT_RATIO); // Cap at 40cm or 30% width
+    // Default 40cm, key off User Input if available
+    let targetWidth = 40;
+    if (engineeringSpecs.sideStorageWidth) {
+      targetWidth = engineeringSpecs.sideStorageWidth;
+    }
+
+    // Constraint: Max 1/3 of Desk LENGTH (not depth/width)
+    // User Requirement: "cannot span more than a 3rd of the length of the desk top"
+    // Note: 'length' is the long dimension (Left-Right).
+    const maxAllowed = length * MAX_SIDE_UNIT_RATIO;
+
+    // Apply Constraint
+    sideUnitWidth = Math.min(targetWidth, maxAllowed);
+
+    if (targetWidth !== 40 || sideUnitWidth !== targetWidth) {
+      console.log(`[DesignGenerator] Side Storage Width: Requested=${targetWidth}cm, MaxAllowed=${maxAllowed.toFixed(1)}cm, Final=${sideUnitWidth}cm`);
+    }
   }
 
   // Calculate Total Occupied Width
@@ -840,7 +856,8 @@ export async function generateDesign(config) {
     storageType: config.storageType || 'open-compartment',
     storageLocation: config.storageLocation || 'under-top',
     sideStorage: config.sideStorage,
-    sideShelves: config.sideShelves
+    sideShelves: config.sideShelves,
+    sideStorageWidth: config.sideStorageWidth // Pass custom width to generator
   };
 
   // Generate parts based on furniture type + engineering specs
@@ -896,8 +913,8 @@ export async function generateDesign(config) {
   };
 
 
-  // Calculate total cost
-  const totalCost = calculateTotalCost(parts, material);
+  // Cost calculation moved to AFTER BOM correction for accuracy
+  // const totalCost = calculateTotalCost(parts, material);
 
   // Generate assembly instructions
   const instructions = generateInstructions(furnitureType, structuralReport, workforce);
@@ -911,7 +928,7 @@ export async function generateDesign(config) {
     materialColor: color,
     dimensions: finalDimensions,
     parts,
-    totalCost,
+    totalCost: 0, // Placeholder, will be updated after BOM correction
     instructions,
     assemblyTime,
     structural: structuralReport, // Attach engineering data
@@ -963,9 +980,13 @@ export async function generateDesign(config) {
     parts: positionedParts // Use the exploded, positioned parts for 3D
   });
 
+  // Corrected Cost Calculation
+  const correctedTotalCost = calculateTotalCost(correctedParts, material);
+
   return {
     ...design,
     parts: correctedParts, // Use corrected BOM from 3D
+    totalCost: correctedTotalCost, // Update cost with actual parts
     warnings: finalWarnings, // Override with full list
     geometry: geometry3D
   };

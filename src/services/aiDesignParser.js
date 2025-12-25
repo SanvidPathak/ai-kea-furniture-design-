@@ -122,6 +122,10 @@ const FURNITURE_DESIGN_SCHEMA = {
         right: { type: 'integer', description: 'Number of shelves for right side storage. Default 2.' }
       },
       description: 'Specific shelf counts for side storage units.'
+    },
+    sideStorageWidth: {
+      type: 'integer',
+      description: 'Width/Length of the side storage unit (tower) in cm. Default is 40.'
     }
   },
   required: ['furnitureType', 'material', 'dimensions', 'materialColor', 'styleNotes', 'confidence', 'projectedLoad', 'partitionStrategy']
@@ -145,6 +149,7 @@ Materials: wood (#8B4513), metal (#2C2C2C), plastic (#FFFFFF).
 - "small" -> -20% size. "kids" -> -30% height.
 - Extract load/weight capacity if mentioned (e.g. "for 200kg" -> projectedLoad: 200)
 - Extract SHELF COUNT if mentioned (e.g. "7 shelves" -> shelfCount: 7).
+- Extract SIDE STORAGE WIDTH if mentioned (e.g. "50cm wide shelves" -> sideStorageWidth: 50).
 
 **Instructions**:
 - Return ONLY valid JSON matching this exact structure.
@@ -307,6 +312,7 @@ export async function parseNaturalLanguage(userInput) {
       shelfModifiers: result.shelfModifiers,
       sideStorage: result.sideStorage,
       sideShelves: result.sideShelves,
+      sideStorageWidth: result.sideStorageWidth,
       warnings: (() => {
         const warnings = result.warnings || [];
         // ambiguity validation logic
