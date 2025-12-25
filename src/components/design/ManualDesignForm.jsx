@@ -114,8 +114,6 @@ export function ManualDesignForm({ onDesignGenerated }) {
       const params = {
         furnitureType: formData.furnitureType,
         material: formData.material,
-        furnitureType: formData.furnitureType,
-        material: formData.material,
         materialColor: formData.materialColor,
         hasArmrests: formData.hasArmrests, // Pass the flag
       };
