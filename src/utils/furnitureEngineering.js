@@ -233,12 +233,13 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
 
     // --- 1. ASSIGN ANCHOR PATTERNS ---
     positionedParts.forEach(part => {
-        // Tables / Desks
-        if (furnitureType === 'table' || furnitureType === 'desk') {
+        // Tables
+        if (furnitureType === 'table') {
             // Table Top
             if (part.type === 'surface' || part.name.toLowerCase().includes('top')) {
                 const thickness = safeNum(part.dimensions.height);
-                part.position = { x: 0, y: (height / 2) - (thickness / 2), z: 0 };
+                // Fix: Top should be at the TOP (height), not middle (height/2)
+                part.position = { x: 0, y: height - (thickness / 2), z: 0 };
             }
             // Corner Legs
             else if ((part.type === 'support' || part.name.toLowerCase().includes('leg'))
@@ -281,7 +282,16 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
                     z: -(width / 2) + (pThick / 2)
                 };
             }
+            // Arm Rests (Top Bar)
+            else if (part.name.toLowerCase().includes('arm') && part.name.toLowerCase().includes('top')) {
+                part.anchorPattern = 'chair-arms';
+            }
+            // Arm Rests (Support Post)
+            else if (part.name.toLowerCase().includes('arm') && part.name.toLowerCase().includes('support')) {
+                part.anchorPattern = 'chair-arm-supports';
+            }
         }
+
 
         // Bookshelves
         else if (furnitureType === 'bookshelf') {
@@ -324,7 +334,85 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
         const qty = part.quantity || 1;
 
         // Pattern 1: CORNERS (4 Legs)
-        if (qty > 1 && part.anchorPattern === 'corners') {
+        if (furnitureType === 'chair') {
+            // CHAIR LOGIC - DECOUPLED
+            const seatLevel = dimensions.height * 0.5;
+
+            // Seat
+            if (part.name.toLowerCase().includes('seat') || part.name === 'Seat') {
+                explodedParts.push({
+                    ...part,
+                    quantity: 1,
+                    position: { x: 0, y: seatLevel + (safeNum(part.dimensions.height) / 2), z: 0 }
+                });
+            }
+            // Backrest
+            else if (part.name.toLowerCase().includes('backrest')) {
+                const backHeight = safeNum(part.dimensions.height);
+                explodedParts.push({
+                    ...part,
+                    quantity: 1,
+                    position: { x: 0, y: seatLevel + (backHeight / 2) + 2, z: -(dimensions.width / 2) + (safeNum(part.dimensions.width) / 2) }
+                });
+            }
+            // Arm Rest Top
+            else if (part.name.toLowerCase().includes('arm rest top') || part.anchorPattern === 'chair-arms') {
+                const thick = safeNum(part.dimensions.length);
+                const height = safeNum(part.dimensions.height);
+                const armLen = safeNum(part.dimensions.width); // Z-Length
+                const xOff = (dimensions.width / 2) - (thick / 2);
+                const zOff = (dimensions.width - armLen) / 2;
+
+                // DYNAMIC LOOKUP FOR SUPPORT HEIGHT (The Fix)
+                const supportPart = parts.find(p => p.name.toLowerCase().includes('arm support'));
+                const supportHeight = supportPart ? safeNum(supportPart.dimensions.height) : 22;
+
+                explodedParts.push({
+                    ...part, id: `${part.id}-L`, quantity: 1,
+                    position: { x: -xOff, y: seatLevel + supportHeight + (height / 2), z: zOff }
+                });
+                explodedParts.push({
+                    ...part, id: `${part.id}-R`, quantity: 1,
+                    position: { x: xOff, y: seatLevel + supportHeight + (height / 2), z: zOff }
+                });
+            }
+            // Arm Support
+            else if (part.name.toLowerCase().includes('arm support') || part.anchorPattern === 'chair-arm-supports') {
+                // Infer params from generator
+                const thick = safeNum(part.dimensions.length);
+                const height = safeNum(part.dimensions.height);
+                const xOff = (dimensions.width / 2) - (thick / 2);
+                const zOff = (dimensions.length / 2) - thick; // Front edge
+
+                explodedParts.push({
+                    ...part, id: `${part.id}-L`, quantity: 1,
+                    position: { x: -xOff, y: seatLevel + (height / 2), z: zOff }
+                });
+                explodedParts.push({
+                    ...part, id: `${part.id}-R`, quantity: 1,
+                    position: { x: xOff, y: seatLevel + (height / 2), z: zOff }
+                });
+            }
+            // Chair Legs
+            else if (qty > 1 && part.anchorPattern === 'corners') {
+                // Standard Corner Logic for Chair Legs
+                const pLen = safeNum(part.dimensions.length);
+                const pWid = safeNum(part.dimensions.width);
+                const pHei = safeNum(part.dimensions.height);
+                const inset = 2;
+                const halfL = (length / 2) - (pLen / 2) - inset;
+                const halfW = (width / 2) - (pWid / 2) - inset;
+                const corners = [{ x: halfL, z: halfW }, { x: -halfL, z: halfW }, { x: -halfL, z: -halfW }, { x: halfL, z: -halfW }];
+                for (let i = 0; i < qty; i++) {
+                    const pos = corners[i % 4];
+                    explodedParts.push({
+                        ...part, id: `${part.id}-${i}`, quantity: 1,
+                        position: { x: pos.x, y: pHei / 2, z: pos.z }
+                    });
+                }
+            }
+        }
+        else if (qty > 1 && part.anchorPattern === 'corners') {
             const pLen = safeNum(part.dimensions.length);
             const pWid = safeNum(part.dimensions.width);
             const pHei = safeNum(part.dimensions.height);
@@ -650,20 +738,15 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
                 });
             }
         }
+
+
+
         // Pattern 5: APRON
         else if (part.anchorPattern === 'apron') {
-            const pLen = safeNum(part.dimensions.length);
             const pHei = safeNum(part.dimensions.height);
-            // We expect pLen to be shortened (Length - 2*Leg).
-            // But checking 'name' is safer than length diffs.
 
-            const hb1 = design1.parts.find(p => p.name === 'Headboard');
-            const legs1 = design1.parts.filter(p => p.name.includes('Post') || p.name.includes('Center Support Leg'));
-            console.log('DEBUG: Part Names found:', design1.parts.map(p => p.name).join(', '));
-            console.log(`Dim: L=${design1.dimensions.length}, W=${design1.dimensions.width} (Headboard L=${hb1 ? hb1.dimensions.length : 'N/A'})`);
-            console.log(`Leg Count: ${legs1.length} (Expect 4 + Center Legs)`);
             // Find leg size dynamically
-            const legPart = parts.find(p => p.name.toLowerCase().includes('leg'));
+            const legPart = parts.find(p => p.name.toLowerCase().includes('table leg') || p.id.includes('table-leg'));
             const legSize = legPart ? safeNum(legPart.dimensions.width) : 5;
 
             // Find top thickness dynamically
@@ -674,21 +757,64 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
 
             if (part.name.includes('Long')) {
                 // Runs along X. Position Z away from center.
-                // Align with center of legs: Z = +/- (Width/2 - LegSize/2)
-                const zOffset = (dimensions.width / 2) - (legSize / 2);
-                explodedParts.push({ ...part, id: part.id + '-1', quantity: 1, position: { x: 0, y: apronY, z: zOffset }, rotation: { x: 0, y: 0, z: 0 } });
-                explodedParts.push({ ...part, id: part.id + '-2', quantity: 1, position: { x: 0, y: apronY, z: -zOffset }, rotation: { x: 0, y: 0, z: 0 } });
+                // RECALCULATE LENGTH to ensure fit (X-Axis)
+                const legP = parts.find(p => p.name.toLowerCase().includes('table leg') || p.id.includes('table-leg'));
+                const lLen = legP ? safeNum(legP.dimensions.length) : 5;
+                const lWid = legP ? safeNum(legP.dimensions.width) : 5;
+                const inset = 2; const safety = 0.05;
+                const safeLength = dimensions.length - (2 * lLen) - (2 * inset) - safety;
+
+                // Align with center of legs: Z = +/- (Width/2 - LegWidthZ/2 - Inset)
+                // Leg Z Center = (W/2) - (LegZ/2) - InsetZ.
+                const zOffset = (dimensions.width / 2) - (lWid / 2) - inset;
+
+                explodedParts.push({
+                    ...part,
+                    id: part.id + '-1',
+                    quantity: 1,
+                    dimensions: { ...part.dimensions, length: safeLength }, // Override Length
+                    position: { x: 0, y: apronY, z: zOffset },
+                    rotation: { x: 0, y: 0, z: 0 }
+                });
+                explodedParts.push({
+                    ...part,
+                    id: part.id + '-2',
+                    quantity: 1,
+                    dimensions: { ...part.dimensions, length: safeLength }, // Override Length
+                    position: { x: 0, y: apronY, z: -zOffset },
+                    rotation: { x: 0, y: 0, z: 0 }
+                });
             }
             else if (part.name.includes('Short')) {
                 // Runs along Z. Position X away from center.
-                // Align with center of legs: X = +/- (Length/2 - LegSize/2)
-                const xOffset = (dimensions.length / 2) - (legSize / 2);
-                // Rotation 90 degrees around Y usually for Z-aligned parts?
-                // Wait, if dimensions.length is Z-length? No, dimensions.length is usually X.
-                // If I rotate 90, X becomes Z.
-                // So "Length" (X-dim) becomes Length along Z.
-                explodedParts.push({ ...part, id: part.id + '-1', quantity: 1, position: { x: xOffset, y: apronY, z: 0 }, rotation: { x: 0, y: Math.PI / 2, z: 0 } });
-                explodedParts.push({ ...part, id: part.id + '-2', quantity: 1, position: { x: -xOffset, y: apronY, z: 0 }, rotation: { x: 0, y: Math.PI / 2, z: 0 } });
+                // RECALCULATE LENGTH to ensure fit (Z-Axis)
+                const legP = parts.find(p => p.name.toLowerCase().includes('table leg') || p.id.includes('table-leg'));
+                const lLen = legP ? safeNum(legP.dimensions.length) : 5;
+                const lWid = legP ? safeNum(legP.dimensions.width) : 5;
+                const inset = 2; const safety = 0.05;
+
+                // Width - 2*LegWidth(Z) - 2*Inset - Safety
+                const safeLength = dimensions.width - (2 * lWid) - (2 * inset) - safety;
+
+                // Align with center of legs: X = +/- (Length/2 - LegLength(X)/2 - Inset)
+                const xOffset = (dimensions.length / 2) - (lLen / 2) - inset;
+
+                explodedParts.push({
+                    ...part,
+                    id: part.id + '-1',
+                    quantity: 1,
+                    dimensions: { ...part.dimensions, length: safeLength }, // Override Length
+                    position: { x: xOffset, y: apronY, z: 0 },
+                    rotation: { x: 0, y: Math.PI / 2, z: 0 }
+                });
+                explodedParts.push({
+                    ...part,
+                    id: part.id + '-2',
+                    quantity: 1,
+                    dimensions: { ...part.dimensions, length: safeLength }, // Override Length
+                    position: { x: -xOffset, y: apronY, z: 0 },
+                    rotation: { x: 0, y: Math.PI / 2, z: 0 }
+                });
             }
             else {
                 // Fallback
@@ -698,87 +824,7 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
 
 
 
-        // SPECIAL PARTS (Intercept before generic)
-        else if (part.name.toLowerCase().includes('chair-seat') || part.name === 'Seat') {
-            const seatLevel = dimensions.height * 0.5;
-            explodedParts.push({
-                ...part,
-                quantity: 1,
-                position: { x: 0, y: seatLevel + (safeNum(part.dimensions.height) / 2), z: 0 }
-            });
-        }
-        else if (part.name.toLowerCase().includes('backrest')) {
-            const seatLevel = dimensions.height * 0.5;
-            const backHeight = safeNum(part.dimensions.height);
-            // Sit on top of the seat. seatLevel is center. We assume thin seat, so just above center.
-            explodedParts.push({
-                ...part,
-                quantity: 1,
-                // Flush with rear edge: -Depth/2 + Thickness/2
-                position: { x: 0, y: seatLevel + (backHeight / 2) + 2, z: -(dimensions.width / 2) + (safeNum(part.dimensions.width) / 2) }
-            });
-        }
-        else if (part.name.toLowerCase().includes('arm rest top')) {
-            const thick = safeNum(part.dimensions.length);
-            const height = safeNum(part.dimensions.height);
-            const armLen = safeNum(part.dimensions.width); // Z-Length
 
-            // X-Offset: Push to edges
-            const xOff = (dimensions.width / 2) - (thick / 2);
-
-            // Z-Offset: Shift forward to butt against backrest
-            // Gap = ChairDepth - ArmLength (which is BackThickness)
-            // Shift = Gap / 2
-            const zOff = (dimensions.width - armLen) / 2;
-
-            const seatLevel = dimensions.height * 0.5;
-            const supportHeight = 22; // Matches designGenerator
-
-            // Position Top Bar
-            explodedParts.push({
-                ...part,
-                id: `${part.id}-L`,
-                originalId: part.id,
-                quantity: 1,
-                position: { x: -xOff, y: seatLevel + supportHeight + (height / 2), z: zOff }
-            });
-            explodedParts.push({
-                ...part,
-                id: `${part.id}-R`,
-                originalId: part.id,
-                quantity: 1,
-                position: { x: xOff, y: seatLevel + supportHeight + (height / 2), z: zOff }
-            });
-        }
-        else if (part.name.toLowerCase().includes('arm support')) {
-            const thick = safeNum(part.dimensions.length);
-            const depth = safeNum(part.dimensions.width);
-            const height = safeNum(part.dimensions.height);
-
-            const xOff = (dimensions.width / 2) - (thick / 2);
-            const seatLevel = dimensions.height * 0.5;
-
-            // Z-Offset: Place at the FRONT edge.
-            // Dimensions.width is the Chair Depth (45).
-            const zOff = (dimensions.width / 2) - (depth / 2);
-
-            // Position Left Support
-            explodedParts.push({
-                ...part,
-                id: `${part.id}-L`,
-                originalId: part.id,
-                quantity: 1,
-                position: { x: -xOff, y: seatLevel + (height / 2), z: zOff }
-            });
-            // Position Right Support
-            explodedParts.push({
-                ...part,
-                id: `${part.id}-R`,
-                originalId: part.id,
-                quantity: 1,
-                position: { x: xOff, y: seatLevel + (height / 2), z: zOff }
-            });
-        }
         // SPECIAL: Bookshelf Back Panel
         else if (part.name.toLowerCase().includes('back panel')) {
             const pThick = safeNum(part.dimensions.width); // Z-dim
@@ -1116,7 +1162,6 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
                     part.position = { x: 0, y: safeNum(part.dimensions.height) / 2, z: 0 };
                 }
                 explodedParts.push(part);
-                // console.log(`[FurnitureEngineering] Passing through single part: ${part.name} (Qty ${qty})`);
             }
         }
     });
@@ -1128,25 +1173,19 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
 
 /**
  * UNIFIED ENGINEERING PIPELINE
- * Centralizes all structural calculations to ensure consistency and prevent data mismatches.
- * Now Async to support future API integrations and non-blocking calculations.
- * @param {object} config
- * @param {string} config.furnitureType
- * @param {object} config.dimensions {length, width, height}
- * @param {string} config.material
- * @returns {Promise<object>} { legSize, topThickness, additions, loadAnalysis, structuralReport }
+ * Centralizes all structural calculations.
  */
 export async function generateEngineeringSpecs(config) {
     const { furnitureType, dimensions, material, projectedLoad } = config;
 
-    // Simulate async work (minimal delay to unblock event loop)
+    // Simulate async work
     await new Promise(resolve => setTimeout(resolve, 0));
 
     // 1. Load Analysis
-    // Ensure we get a proper object even if internal function fails
     let loadAnalysis = calculateLoadRequirements(furnitureType);
+
+    // Fallback for stale code state where it returns a number
     if (typeof loadAnalysis === 'number') {
-        // Fallback for stale code state
         loadAnalysis = {
             totalLoad: loadAnalysis,
             expectedLoad: { distributed: loadAnalysis, point: loadAnalysis * 0.8 },

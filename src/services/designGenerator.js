@@ -39,7 +39,7 @@ const DEFAULT_DIMENSIONS = {
   chair: { length: 45, width: 45, height: 90 },
   bookshelf: { length: 80, width: 30, height: 180 },
   desk: { length: 140, width: 70, height: 75 },
-  'bed frame': { length: 200, width: 150, height: 40 },
+  'bed frame': { length: 90, width: 190, height: 40 },
 };
 
 /**
@@ -70,9 +70,61 @@ function generateTableParts(dimensions, material, color, engineeringSpecs) {
     },
   ];
 
+  // Logic for Long Tables (>220cm)
+  const needsExtraSupport = length > 220;
+
+  if (needsExtraSupport) {
+    // Add Perimeter Support Legs (Mid-point of Long Sides)
+    parts.push({
+      id: 'table-leg-mid',
+      name: 'Perimeter Support Leg',
+      type: 'support',
+      dimensions: { length: legSize, width: legSize, height: height - topThickness },
+      quantity: 2,
+      // Manual positioning required or handle in furnitureEngineering? 
+      // Manual is safer for specific perimeter requirement.
+      // X=0 (Mid), Z = +/- (Width/2 - LegSize/2)
+      position: { x: 0, y: (height - topThickness) / 2, z: (width / 2) - (legSize / 2) },
+      // Duplicate for Z negative ? anchorPattern 'mid-legs'?
+      // Let's use explicit quantity 1 for each to avoid complex pattern logic
+    });
+    // Actually, pushing 2 manual parts is better
+    parts.pop(); // Remove the generic push above
+
+    // Inset to match Corner Legs (Pattern 1 default)
+    const inset = 2;
+    const legZ = (width / 2) - (legSize / 2) - inset;
+    const legY = (height - topThickness) / 2;
+
+    parts.push({
+      id: 'table-leg-mid-1',
+      name: 'Perimeter Support Leg',
+      type: 'support',
+      dimensions: { length: legSize, width: legSize, height: height - topThickness },
+      quantity: 1,
+      position: { x: 0, y: legY, z: legZ },
+      material, color
+    });
+    parts.push({
+      id: 'table-leg-mid-2',
+      name: 'Perimeter Support Leg',
+      type: 'support',
+      dimensions: { length: legSize, width: legSize, height: height - topThickness },
+      quantity: 1,
+      position: { x: 0, y: legY, z: -legZ },
+      material, color
+    });
+  }
+
   // Add structural additions if any
   if (engineeringSpecs.additions) {
     engineeringSpecs.additions.forEach((add, idx) => {
+      // Ignore 'center-support' if we handled it via Perimeter Legs?
+      // engineeringSpecs might trigger 'center-support' based on Load.
+      // If we forcefully added legs, we should suppress duplicate center legs if they clash.
+      // But 'center-support' usually means straight down the middle (X=0, Z=0).
+      // Perimeter legs are X=0, Z=Side. So no clash.
+
       if (add.type === 'center-support') {
         parts.push({
           id: `center-leg-${idx}`,
@@ -85,24 +137,55 @@ function generateTableParts(dimensions, material, color, engineeringSpecs) {
         });
       }
       if (add.type === 'apron') {
-        // Aprons fit BETWEEN the legs
-        // Long Apron: Runs along Length. Size = Length - 2*LegSize.
-        parts.push({
-          id: `apron-long-${idx}`,
-          name: 'Apron (Long)',
-          type: 'support',
-          dimensions: { length: length - (2 * legSize), width: add.dimensions.thickness, height: add.dimensions.height },
-          quantity: 2,
-          anchorPattern: 'apron',
-          material,
-          color
-        });
-        // Short Apron: Runs along Width. Size = Width - 2*LegSize.
+        const apronHei = add.dimensions.height;
+        const apronThick = add.dimensions.thickness;
+        // Apron Y Position: Under Top
+        const apronY = height - topThickness - (apronHei / 2);
+
+        if (needsExtraSupport) {
+          // SPLIT APRON LOGIC (Updated for 2cm Inset)
+          const inset = 2; // Matches leg inset
+          const safety = 0.05; // Gap
+
+          // Gap = L/2 - 1.5*LegSize - Inset
+          const segmentLength = (length / 2) - (1.5 * legSize) - inset - safety;
+
+          // Center X = L/4 - 0.25*LegSize - 0.5*Inset
+          const segCenterX = (length / 4) - (0.25 * legSize) - (0.5 * inset);
+
+          // Z Offset matches Inset Legs
+          const zOffset = (width / 2) - (legSize / 2) - inset;
+
+          // Create 4 segments
+          // Front Left (-X, +Z)
+          parts.push(createManualApron(`apron-FL`, -segCenterX, apronY, zOffset, segmentLength, apronThick, apronHei, material, color));
+          // Front Right (+X, +Z)
+          parts.push(createManualApron(`apron-FR`, segCenterX, apronY, zOffset, segmentLength, apronThick, apronHei, material, color));
+          // Back Left (-X, -Z)
+          parts.push(createManualApron(`apron-BL`, -segCenterX, apronY, -zOffset, segmentLength, apronThick, apronHei, material, color));
+          // Back Right (+X, -Z)
+          parts.push(createManualApron(`apron-BR`, segCenterX, apronY, -zOffset, segmentLength, apronThick, apronHei, material, color));
+
+        } else {
+          // STANDARD LONG APRON
+          parts.push({
+            id: `apron-long-${idx}`,
+            name: 'Apron (Long)',
+            type: 'support',
+            dimensions: { length: length - (2 * legSize), width: apronThick, height: apronHei },
+            quantity: 2,
+            anchorPattern: 'apron',
+            material,
+            color
+          });
+        }
+
+        // SHORT APRON (Always Standard)
         parts.push({
           id: `apron-short-${idx}`,
           name: 'Apron (Short)',
           type: 'support',
-          dimensions: { length: width - (2 * legSize), width: add.dimensions.thickness, height: add.dimensions.height },
+          dimensions: { length: width - (2 * legSize), width: apronThick, height: apronHei },
           quantity: 2,
           anchorPattern: 'apron',
           material,
@@ -113,6 +196,20 @@ function generateTableParts(dimensions, material, color, engineeringSpecs) {
   }
 
   return parts;
+}
+
+// Helper for Manual Apron
+function createManualApron(id, x, y, z, len, thick, h, mat, col) {
+  return {
+    id,
+    name: 'Apron Segment',
+    type: 'support',
+    dimensions: { length: len, width: thick, height: h },
+    quantity: 1,
+    position: { x, y, z },
+    material: mat,
+    color: col
+  };
 }
 
 /**
@@ -1031,9 +1128,11 @@ export async function generateDesign(config) {
     shelfModifiers: config.shelfModifiers || [], // Per-shelf overrides
   });
 
-  const { legSize, topThickness, additions, loadAnalysis } = specs;
+  const { legSize, topThickness, additions, loadAnalysis, ...loadSpecs } = specs;
 
   // Extract for validation phase
+  console.log(`[DesignGenerator] Flag hasArmrests: ${hasArmrests}`);
+
   const distributedLoad = projectedLoad || loadAnalysis.expectedLoad?.distributed || 50;
 
   const engineeringSpecs = {
@@ -1044,9 +1143,9 @@ export async function generateDesign(config) {
     distributedLoad, // Pass load to part generators (Crucial for bed Heavy Duty check)
     shelves: specs.shelves, // Pass shelves count
     partitionStrategy: specs.partitionStrategy, // Pass partition strategy
-    distributedLoad: distributedLoad, // Pass load for structural sizing
+    // distributedLoad: distributedLoad, // Pass load for structural sizing - This line was a duplicate and is removed.
     partitionRatio: config.partitionRatio || specs.partitionRatio, // 60-40, etc.
-    partitionCount: config.partitionCount || specs.partitionCount, // Pass partition count directly from config
+    partitionCount: config.partitionCount || specs.partitionCount, // Number of partitions per shelf
     deskPartitionCount: config.partitionCount || specs.partitionCount, // Alias for desk safety
     shelfModifiers: specs.shelfModifiers, // Pass modifiers
     storageType: config.storageType || 'open-compartment',
@@ -1182,7 +1281,8 @@ export async function generateDesign(config) {
 
   return {
     ...design,
-    parts: correctedParts, // Use corrected BOM from 3D
+    parts: correctedParts, // Use corrected BOM for UI
+    bom: undefined, // Cleanup
     totalCost: correctedTotalCost, // Update cost with actual parts
     warnings: finalWarnings, // Override with full list
     geometry: geometry3D

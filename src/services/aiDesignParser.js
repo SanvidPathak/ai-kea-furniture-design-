@@ -21,7 +21,7 @@ const FURNITURE_DESIGN_SCHEMA = {
     bedSize: {
       type: 'string',
       enum: ['Single', 'Twin', 'Twin XL', 'Double', 'Full', 'Queen', 'King', 'Super King', 'California King'],
-      description: 'Standard bed size name if specified (e.g., "Queen", "King").'
+      description: 'Standard bed size name if specified. IMPORTANT: If user provides NO size details, DEFAULT to "Twin".'
     },
     material: {
       type: 'string',
@@ -45,7 +45,7 @@ const FURNITURE_DESIGN_SCHEMA = {
         }
       },
       required: ['length', 'width', 'height'],
-      description: 'Physical dimensions in centimeters - use practical, standard sizes'
+      description: 'Physical dimensions in centimeters. IMPORTANT: Leave EMPTY if using standard "bedSize" or if user provided no specific dimensions.'
     },
     materialColor: {
       type: 'string',
@@ -60,7 +60,7 @@ const FURNITURE_DESIGN_SCHEMA = {
     },
     hasArmrests: {
       type: 'boolean',
-      description: 'Whether the furniture (specifically chairs) should have arm rests'
+      description: 'MANDATORY: Set to TRUE if user mentions "arms", "armrests", "arm rest", "with arms", or "armchair".'
     },
     styleNotes: {
       type: 'string',
@@ -160,6 +160,9 @@ Materials: wood (#8B4513), metal (#2C2C2C), plastic (#FFFFFF).
 - Extract load/weight capacity if mentioned (e.g. "for 200kg" -> projectedLoad: 200)
 - Extract SHELF COUNT if mentioned (e.g. "7 shelves" -> shelfCount: 7).
 - Extract SIDE STORAGE WIDTH if mentioned (e.g. "50cm wide shelves" -> sideStorageWidth: 50).
+- **Chair Logic**:
+  - **Armrests**: If user says "Armchair", "Chair with arms", "armed chair", "arms included", you MUST set \`hasArmrests: true\`.
+  - Default is \`false\` (No arms) unless specified or implied by "Armchair".
 
 **Instructions**:
 - Return ONLY valid JSON matching this exact structure.
@@ -350,6 +353,7 @@ export async function parseNaturalLanguage(userInput) {
         originalQuery: userInput,
       }
     };
+
   } catch (error) {
     // Enhanced error messages
     if (error.message?.includes('Rate limit')) {

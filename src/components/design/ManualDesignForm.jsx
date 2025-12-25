@@ -114,7 +114,10 @@ export function ManualDesignForm({ onDesignGenerated }) {
       const params = {
         furnitureType: formData.furnitureType,
         material: formData.material,
+        furnitureType: formData.furnitureType,
+        material: formData.material,
         materialColor: formData.materialColor,
+        hasArmrests: formData.hasArmrests, // Pass the flag
       };
 
       // Add dimensions if provided
@@ -227,6 +230,23 @@ export function ManualDesignForm({ onDesignGenerated }) {
           />
         </div>
       </div>
+
+      {/* Chair Specific Options */}
+      {formData.furnitureType === 'chair' && (
+        <div className="flex items-center space-x-2 mt-4">
+          <input
+            type="checkbox"
+            id="hasArmrests"
+            name="hasArmrests"
+            checked={formData.hasArmrests || false}
+            onChange={(e) => handleChange({ target: { name: 'hasArmrests', value: e.target.checked } })}
+            className="rounded border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="hasArmrests" className="text-sm text-neutral-700 dark:text-neutral-300">
+            Include Armrests
+          </label>
+        </div>
+      )}
 
       <Button
         type="submit"
