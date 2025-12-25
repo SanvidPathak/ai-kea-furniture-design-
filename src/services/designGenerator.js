@@ -934,8 +934,10 @@ export async function generateDesign(config) {
   const aggregatedParts = new Map();
 
   positionedParts.forEach(p => {
-    // Normalizing Key
-    const key = p.name;
+    // Normalizing Key: Group by Name AND Dimensions to distinguish variants
+    // Round dimensions to avoid float precision issues causing duplicates
+    const dimKey = `${Math.round(p.dimensions.length)}x${Math.round(p.dimensions.width)}x${Math.round(p.dimensions.height)}`;
+    const key = `${p.name}|${dimKey}`;
 
     if (aggregatedParts.has(key)) {
       const entry = aggregatedParts.get(key);
@@ -947,7 +949,7 @@ export async function generateDesign(config) {
       delete genericPart.position; // Remove specific position
       delete genericPart.id;       // Remove instance ID
       // Assign a generic ID for the list
-      genericPart.id = p.name.toLowerCase().replace(/\s+/g, '-');
+      genericPart.id = p.name.toLowerCase().replace(/\s+/g, '-') + '-' + dimKey;
 
       aggregatedParts.set(key, genericPart);
     }

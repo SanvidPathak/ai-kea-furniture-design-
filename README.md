@@ -1,53 +1,38 @@
 # AI-KEA - AI-Powered Modular Furniture Design Platform
 
-AI-KEA is a full-stack web application that allows users to design custom modular furniture using either AI-powered natural language input or manual parameter controls. The platform generates detailed parts lists, assembly instructions, cost estimates, and enables users to save and manage their designs.
+AI-KEA is a full-stack web application that allows users to design custom modular furniture using a **Hybrid Intelligence** system. It combines the ease of AI natural language with the precision of paramatric engineering.
 
-## Features
+## 🚀 Key Features
 
-- **Dual Design Modes**
-  - 🤖 **AI Mode**: Describe your furniture in plain English and let AI generate the complete design
-  - 📐 **Manual Mode**: Use precise controls to customize furniture type, material, color, and dimensions
+### 🏛️ Platform Capabilities
+- **Dual Design Modes**:
+  - 🤖 **AI Mode**: Natural language design (e.g., "Scanning complete... Desk with 3 shelves").
+  - 📐 **Manual Mode**: Granular control over dimensions, materials, and colors.
+- **User Accounts**: Firebase-backed profiles to save, edit, and track designs.
+- **3D Visualization**: Real-time Interactive 3D preview using ThreeJS.
+- **Order Management**: Complete lifecycle tracking from "Design" to "Delivered".
 
-- **Furniture Types**
-  - Tables
-  - Chairs
-  - Bookshelves
-  - Desks
-  - Bed Frames
+### 🧠 Hybrid Engineering Engine (Updated V4)
+- **Hybrid Intelligence**: Combines AI intent parsing with Regex precision.
+  - *Example*: "Partitions 3:2:5" overrides AI to force exact spacing.
+- **Desk V4 Geometry**:
+  - **Floating Box Topology**: Precision alignment for complex side storage.
+  - **Load-Adaptive Structure**: Walls thicken (1.5cm → 5.0cm) dynamically based on load (e.g., 600kg), while shelves remain efficient.
+- **Smart Logic**:
+  - **Bookshelves**: Complex partition ratios and range-based rules.
+  - **Side Storage**: Horizontal shelf generation with authentic carpentry logic (Bottom + N shelves).
 
-- **Material Options**
-  - Wood (Brown, Oak, Walnut)
-  - Metal (Silver, Black, Bronze)
-  - Plastic (White, Gray, Red, Teal, Yellow)
+### 🪑 Furniture Catalog
+- **Smart Desks**: Customizable storage, aprons, and load ratings.
+- **Bookshelves**: Variable partitioning and shelf counts.
+- **Tables & Chairs**: Parametric templates with stability analysis.
+- **Bed Frames**: Structural integrity checks and slat generation.
 
-- **User Features**
-  - User authentication (signup/login)
-  - Save and manage personal designs
-  - View detailed design specifications
-  - Delete saved designs
-  - Real-time toast notifications
-  - User account management
-  - Order tracking and history
-
-- **Design Output**
-  - Complete parts list with quantities and dimensions
-  - Step-by-step assembly instructions
-  - Total cost calculation with detailed breakdown
-  - Estimated assembly time
-  - Material and color visualization
-  - Export to PDF, CSV, and assembly instructions
-
-- **Order Management**
-  - Place orders from saved designs
-  - Order status tracking (Processing → Confirmed → Manufacturing → Shipped → Delivered)
-  - Order history and details
-  - Export order information
-
-- **Search & Filter**
-  - Search designs by type or material
-  - Sort designs (newest, oldest, by name, by cost)
-  - Filter orders by status
-  - Real-time search results
+### 🏭 Manufacturing & Output
+- **Precision BOM**: Parts list grouped by **Name + Dimensions** to prevent manufacturing errors.
+- **Cost Analysis**: Real-time pricing based on material volume (Wood/Metal/Plastic).
+- **Assembly Instructions**: Step-by-step guides generated directly from the 3D model.
+- **Export Options**: PDF blueprints and CSV data.
 
 ## Tech Stack
 
