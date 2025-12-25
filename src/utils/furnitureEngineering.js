@@ -407,12 +407,18 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
 
             for (let i = 0; i < count; i++) {
                 const zPos = startZ + (step * i);
+
+                // Respect explicit Y if provided (e.g. Bed Slats on Rails), else floor
+                const yPos = (part.position && part.position.y !== undefined)
+                    ? part.position.y
+                    : (part.dimensions.height / 2);
+
                 explodedParts.push({
                     ...part,
                     id: `${part.id}-${i}`,
                     originalId: part.id,
                     quantity: 1,
-                    position: { x: 0, y: part.dimensions.height / 2, z: zPos }
+                    position: { x: 0, y: yPos, z: zPos }
                 });
             }
         }
@@ -651,6 +657,11 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
             // We expect pLen to be shortened (Length - 2*Leg).
             // But checking 'name' is safer than length diffs.
 
+            const hb1 = design1.parts.find(p => p.name === 'Headboard');
+            const legs1 = design1.parts.filter(p => p.name.includes('Post') || p.name.includes('Center Support Leg'));
+            console.log('DEBUG: Part Names found:', design1.parts.map(p => p.name).join(', '));
+            console.log(`Dim: L=${design1.dimensions.length}, W=${design1.dimensions.width} (Headboard L=${hb1 ? hb1.dimensions.length : 'N/A'})`);
+            console.log(`Leg Count: ${legs1.length} (Expect 4 + Center Legs)`);
             // Find leg size dynamically
             const legPart = parts.find(p => p.name.toLowerCase().includes('leg'));
             const legSize = legPart ? safeNum(legPart.dimensions.width) : 5;
@@ -779,7 +790,7 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
             });
         }
         // SPECIAL: Headboard
-        else if (part.name.toLowerCase().includes('headboard')) {
+        else if (part.name.toLowerCase().includes('headboard') && !part.position) {
             const pThick = safeNum(part.dimensions.width);
             explodedParts.push({
                 ...part,
@@ -790,7 +801,7 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
             });
         }
         // SPECIAL: Footboard
-        else if (part.name.toLowerCase().includes('footboard')) {
+        else if (part.name.toLowerCase().includes('footboard') && !part.position) {
             const pThick = safeNum(part.dimensions.width);
             explodedParts.push({
                 ...part,
@@ -1105,11 +1116,12 @@ export function applyAnchorPoints(parts, furnitureType, dimensions) {
                     part.position = { x: 0, y: safeNum(part.dimensions.height) / 2, z: 0 };
                 }
                 explodedParts.push(part);
+                // console.log(`[FurnitureEngineering] Passing through single part: ${part.name} (Qty ${qty})`);
             }
         }
     });
 
-
+    console.log(`[FurnitureEngineering] applyAnchorPoints Result: ${explodedParts.length} parts generated from ${parts.length} inputs.`);
 
     return { parts: explodedParts, warnings };
 }
@@ -1144,6 +1156,7 @@ export async function generateEngineeringSpecs(config) {
 
     // Override with user requested load if present
     if (projectedLoad) {
+        console.log(`[Engineering] Override Load detected: ${projectedLoad}`);
         // Handle potential string input from AI (e.g., "700" or "700kg")
         const targetLoad = parseInt(String(projectedLoad).replace(/[^0-9]/g, ''), 10);
 

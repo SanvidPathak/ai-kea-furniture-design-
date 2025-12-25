@@ -18,6 +18,11 @@ const FURNITURE_DESIGN_SCHEMA = {
       enum: ['table', 'chair', 'bookshelf', 'desk', 'bed frame'],
       description: 'Type of furniture to design - must be one of the supported types'
     },
+    bedSize: {
+      type: 'string',
+      enum: ['Single', 'Twin', 'Twin XL', 'Double', 'Full', 'Queen', 'King', 'Super King', 'California King'],
+      description: 'Standard bed size name if specified (e.g., "Queen", "King").'
+    },
     material: {
       type: 'string',
       enum: ['wood', 'metal', 'plastic'],
@@ -144,8 +149,13 @@ Materials: wood (#8B4513), metal (#2C2C2C), plastic (#FFFFFF).
 - Dining Table: 120-200Lx80-100W | Coffee: 90-120Lx50-70W
 - Desk: length 120-180, width 60-80.
 - Bookshelf: length 60-120, width 25-35, height 150-220.
-- Bed: Single 190x90, Double 190x140, Queen 200x150
-- "small" -> -20% size. "kids" -> -30% height.
+- Desk: length 120-180, width 60-80.
+- Bookshelf: length 60-120, width 25-35, height 150-220.
+- Bed Sizes (Mattress): Single/Twin (90x190), Double/Full (137x190), Queen (160x200 EU / 152x203 US), King (180x200 EU / 193x203 US).
+- **Bed Logic**: 
+  - If user says "Queen Bed", set bedSize: "Queen". 
+  - If user says "Bed for 200x200 mattress", set dimensions: { "length": 200, "width": 200, "height": 40 }.
+  - **Mattress Matches**: If user gives dims, they are MATTRESS dims. Frame will be larger.
 - "small" -> -20% size. "kids" -> -30% height.
 - Extract load/weight capacity if mentioned (e.g. "for 200kg" -> projectedLoad: 200)
 - Extract SHELF COUNT if mentioned (e.g. "7 shelves" -> shelfCount: 7).
@@ -294,6 +304,7 @@ export async function parseNaturalLanguage(userInput) {
     // Return parsed parameters (remove confidence and styleNotes for design generator)
     return {
       furnitureType: result.furnitureType,
+      bedSize: result.bedSize, // Pass through bed size
       material: result.material,
       dimensions: {
         length: result.dimensions.length,
