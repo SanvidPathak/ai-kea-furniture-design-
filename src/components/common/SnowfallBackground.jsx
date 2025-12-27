@@ -83,7 +83,7 @@ export function SnowfallBackground() {
                 const dx = p.x - mouseRef.x;
                 const dy = p.y - mouseRef.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                const interactionRadius = 150;
+                const interactionRadius = 60;
 
                 if (distance < interactionRadius) {
                     const force = (interactionRadius - distance) / interactionRadius;
