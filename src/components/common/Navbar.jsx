@@ -45,6 +45,13 @@ export function Navbar() {
                                 </span>
                                 <span className="hidden sm:block">{user?.displayName || 'User'}</span>
                             </Link>
+                            {/* Admin Studio Link */}
+                            {user?.role === 'admin' && (
+                                <Link to="/studio" className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium dark:text-purple-400 dark:hover:text-purple-300">
+                                    <span className="text-lg">🛠️</span>
+                                    <span className="hidden sm:block">Studio</span>
+                                </Link>
+                            )}
                             <Button variant="secondary" onClick={handleSignOut} className="text-xs sm:text-sm">
                                 Sign Out
                             </Button>

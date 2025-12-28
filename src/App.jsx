@@ -20,6 +20,9 @@ const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage.jsx').then(m 
 const AccountPage = lazy(() => import('./pages/AccountPage.jsx').then(m => ({ default: m.AccountPage })));
 const DesignDetailPage = lazy(() => import('./pages/DesignDetailPage.jsx').then(m => ({ default: m.DesignDetailPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx').then(m => ({ default: m.NotFoundPage })));
+const StudioPage = lazy(() => import('./pages/StudioPage.jsx').then(m => ({ default: m.StudioPage })));
+
+import { AdminRoute } from './components/common/AdminRoute.jsx';
 
 // Loading fallback component
 function PageLoader() {
@@ -66,6 +69,11 @@ function App() {
                         <PrivateRoute>
                           <OrderDetailPage />
                         </PrivateRoute>
+                      } />
+                      <Route path="/studio" element={
+                        <AdminRoute>
+                          <StudioPage />
+                        </AdminRoute>
                       } />
                       <Route path="/account" element={
                         <PrivateRoute>

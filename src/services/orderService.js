@@ -15,6 +15,7 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  onSnapshot,
 } from 'firebase/firestore';
 import { getFirestoreInstance } from './firestoreConfig.js';
 import { calculateTotalCost } from './designGenerator.js';
@@ -108,12 +109,12 @@ export async function getUserOrders(userId) {
     const db = getFirestoreInstance();
     const ordersRef = collection(db, COLLECTION_NAME);
 
-    // Query by userId AND type === 'order', ordered by createdAt descending
+    // Query by userId AND type === 'order'
+    // REMOVED orderBy to avoid Composite Index errors
     const q = query(
       ordersRef,
       where('userId', '==', userId),
-      where('type', '==', DOCUMENT_TYPE),
-      orderBy('createdAt', 'desc')
+      where('type', '==', DOCUMENT_TYPE)
     );
 
     const querySnapshot = await getDocs(q);
@@ -127,7 +128,8 @@ export async function getUserOrders(userId) {
       });
     });
 
-    return orders;
+    // Sort client-side (Newest first)
+    return orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   } catch (error) {
     throw new Error(`Failed to get user orders: ${error.message}`);
   }
@@ -241,6 +243,37 @@ export async function deleteOrder(orderId, userId) {
   } catch (error) {
     throw new Error(`Failed to delete order: ${error.message}`);
   }
+}
+
+/**
+ * Subscribe to User's orders for Real-Time Updates
+ * @param {string} userId
+ * @param {Function} onUpdate
+ * @returns {Function} Unsubscribe
+ */
+export function subscribeToUserOrders(userId, onUpdate) {
+  const db = getFirestoreInstance();
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('userId', '==', userId),
+    where('type', '==', DOCUMENT_TYPE)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const orders = [];
+    snapshot.forEach(doc => {
+      orders.push({
+        id: doc.id,
+        ...convertTimestamps(doc.data())
+      });
+    });
+
+    // Client-side sort
+    const sorted = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    onUpdate(sorted);
+  }, (error) => {
+    console.error('Subscription Error:', error);
+  });
 }
 
 /**

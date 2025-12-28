@@ -22,8 +22,21 @@ export function AuthProvider({ children }) {
     setLoading(false);
 
     // Listen for auth state changes
-    const unsubscribe = onAuthChange((user) => {
-      setUser(user);
+    const unsubscribe = onAuthChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Fetch additional profile data (role) from Firestore
+          const { getUserProfile } = await import('../services/authService.js');
+          const profile = await getUserProfile(firebaseUser.uid);
+          setUser({ ...firebaseUser, ...profile });
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          // Fallback to basic auth user if firestore fails
+          setUser(firebaseUser);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 

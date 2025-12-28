@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { getUserOrders, deleteOrder, getOrderStatusDisplay } from '../services/orderService.js';
+import { subscribeToUserOrders, deleteOrder, getOrderStatusDisplay } from '../services/orderService.js';
 import { signOut } from '../services/authService.js';
 import { Button } from '../components/common/Button.jsx';
 import { SkeletonList } from '../components/common/SkeletonCard.jsx';
@@ -20,27 +20,18 @@ export function MyOrdersPage() {
   const [sortBy, setSortBy] = useState('newest'); // newest, oldest, cost
 
   useEffect(() => {
+    let unsubscribe;
     if (isAuthenticated && user) {
-      loadOrders();
+      setLoading(true);
+      unsubscribe = subscribeToUserOrders(user.uid, (updatedOrders) => {
+        setOrders(updatedOrders);
+        setLoading(false);
+      });
     } else if (!authLoading) {
       setLoading(false);
     }
+    return () => unsubscribe && unsubscribe();
   }, [isAuthenticated, user, authLoading]);
-
-  const loadOrders = async () => {
-    setLoading(true);
-    setErrorMessage('');
-
-    try {
-      const userOrders = await getUserOrders(user.uid);
-      setOrders(userOrders);
-    } catch (error) {
-      console.error('Load orders error:', error);
-      setErrorMessage('Failed to load orders. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCancelOrder = async (orderId) => {
     if (!confirm('Are you sure you want to cancel this order?')) {
@@ -49,8 +40,15 @@ export function MyOrdersPage() {
 
     setDeletingOrderId(orderId);
     try {
-      await deleteOrder(orderId, user.uid);
-      setOrders(orders.filter(o => o.id !== orderId));
+      // Soft Delete: Update status to 'cancelled' instead of deleting
+      const { updateOrder } = await import('../services/orderService.js');
+      await updateOrder(orderId, user.uid, { status: 'cancelled' });
+
+      // Update local state to reflect change without reload
+      setOrders(orders.map(o =>
+        o.id === orderId ? { ...o, status: 'cancelled' } : o
+      ));
+
       showToast('Order cancelled successfully!', 'success');
     } catch (error) {
       console.error('Cancel order error:', error);
