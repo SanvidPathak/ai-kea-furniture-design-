@@ -49,23 +49,23 @@ export function OrderStatusTimeline({ order }) {
       <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-6">Order Progress</h3>
 
       <div className="relative">
-        {/* Progress Line */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-neutral-200 dark:bg-neutral-700"
-          style={{ height: `${(allStatuses.length - 1) * 80}px` }} />
-        <div className="absolute left-6 top-0 w-0.5 bg-ikea-blue transition-all duration-500"
-          style={{ height: `${currentStatusIndex * 80}px` }} />
-
-        {/* Status Steps */}
-        <div className="space-y-4">
+        <div className="space-y-0">
           {allStatuses.map((status, index) => {
             const isCompleted = index <= currentStatusIndex;
             const isCurrent = index === currentStatusIndex;
+            const isLast = index === allStatuses.length - 1;
             const statusHistory = order.statusHistory?.find(h => h.status === status.key);
 
             return (
-              <div key={status.key} className="relative flex items-start gap-4">
+              <div key={status.key} className="relative flex gap-4 pb-8 last:pb-0">
+                {/* Connecting Line (drawn per item) */}
+                {!isLast && (
+                  <div className={`absolute left-6 top-10 bottom-0 w-0.5 -ml-[1px] ${index < currentStatusIndex ? 'bg-ikea-blue' : 'bg-neutral-200 dark:bg-neutral-700'
+                    }`} />
+                )}
+
                 {/* Icon */}
-                <div className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all ${isCompleted
+                <div className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all shrink-0 ${isCompleted
                     ? 'bg-ikea-blue text-white shadow-md'
                     : 'bg-neutral-200 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-600'
                   }`}>
@@ -73,9 +73,8 @@ export function OrderStatusTimeline({ order }) {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 pb-8">
-                  <div className={`font-semibold ${isCompleted ? 'text-neutral-900 dark:text-neutral-200' : 'text-neutral-500 dark:text-neutral-600'
-                    }`}>
+                <div className="flex-1 pt-2">
+                  <div className={`font-semibold ${isCompleted ? 'text-neutral-900 dark:text-neutral-200' : 'text-neutral-500 dark:text-neutral-600'}`}>
                     {status.label}
                     {isCurrent && (
                       <span className="ml-2 text-xs font-normal text-ikea-blue shrink-0">
