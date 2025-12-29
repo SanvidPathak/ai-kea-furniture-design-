@@ -11,6 +11,7 @@ import {
   generateEngineeringSpecs
 } from '../utils/furnitureEngineering.js';
 import { generateThreeJSGeometry } from '../utils/geometryGenerator.js';
+import { getPricingConfig } from './configService.js';
 
 // Material properties: density (g/cm³) and cost per cm³ in INR
 // Updated rates based on 2025 Indian market prices
@@ -924,8 +925,9 @@ function calculateVolume(dimensions) {
 /**
  * Calculate cost of parts
  */
-export function calculateTotalCost(parts, material) {
-  const materialProps = MATERIALS[material] || MATERIALS.wood; // Fallback
+export function calculateTotalCost(parts, material, customPricing = null) {
+  const currentMaterials = customPricing || MATERIALS;
+  const materialProps = currentMaterials[material] || currentMaterials.wood; // Fallback
   let totalCost = 0;
 
   parts.forEach(part => {
@@ -946,13 +948,11 @@ export function calculateTotalCost(parts, material) {
 
 /**
  * Calculate detailed cost breakdown for each part
- * @param {Array} parts - Array of part objects
- * @param {string} material - Material type (wood, metal, plastic)
- * @returns {Array} Array of parts with cost details
  */
-export function calculateCostBreakdown(parts, material) {
-  const materialProps = MATERIALS[material] || MATERIALS.wood;
-  const totalCost = calculateTotalCost(parts, material);
+export function calculateCostBreakdown(parts, material, customPricing = null) {
+  const currentMaterials = customPricing || MATERIALS;
+  const materialProps = currentMaterials[material] || currentMaterials.wood;
+  const totalCost = calculateTotalCost(parts, material, currentMaterials);
 
   return parts.map(part => {
     const volume = calculateVolume(part.dimensions);
@@ -1063,6 +1063,10 @@ export async function generateDesign(config) {
     throw new Error(`Invalid furniture type: ${furnitureType}. Must be one of: table, chair, bookshelf, desk, bed frame`);
   }
 
+  // 0. Fetch Dynamic Pricing Config
+  const pricingConfig = await getPricingConfig();
+  const currentMaterials = pricingConfig || MATERIALS;
+
   // 1. Setup Dimensions & Load (Mutable)
   let finalDimensions = dimensions ? { ...dimensions } : { ...DEFAULT_DIMENSIONS[furnitureType] };
   let projectedLoad = config.projectedLoad;
@@ -1106,12 +1110,12 @@ export async function generateDesign(config) {
     }
   }
 
-  if (!material || !MATERIALS[material]) {
+  if (!material || !currentMaterials[material]) {
     throw new Error(`Invalid material: ${material}. Must be one of: wood, metal, plastic`);
   }
 
   // Use material's default color if not provided
-  const color = materialColor || MATERIALS[material].defaultColor;
+  const color = materialColor || currentMaterials[material].defaultColor || MATERIALS[material].defaultColor;
 
   // --- ENGINEERING PHASE ---
   // Unified Engineering Pipeline
@@ -1277,13 +1281,14 @@ export async function generateDesign(config) {
   });
 
   // Corrected Cost Calculation
-  const correctedTotalCost = calculateTotalCost(correctedParts, material);
+  const correctedTotalCost = calculateTotalCost(correctedParts, material, currentMaterials);
 
   return {
     ...design,
     parts: correctedParts, // Use corrected BOM for UI
     bom: undefined, // Cleanup
     totalCost: correctedTotalCost, // Update cost with actual parts
+    pricingSnapshot: currentMaterials, // Store the pricing config used for this specific design
     warnings: finalWarnings, // Override with full list
     geometry: geometry3D
   };

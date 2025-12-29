@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { calculateCostBreakdown } from '../../services/designGenerator.js';
 
-export function CostBreakdown({ parts, material, totalCost }) {
+export function CostBreakdown({ parts, material, totalCost, pricingSnapshot = null }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!parts || !material) {
     return null;
   }
 
-  const breakdown = calculateCostBreakdown(parts, material);
+  const breakdown = calculateCostBreakdown(parts, material, pricingSnapshot);
 
   return (
     <div className="card">

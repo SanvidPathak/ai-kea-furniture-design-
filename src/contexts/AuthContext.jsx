@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthChange, getCurrentUser } from '../services/authService.js';
+import { onAuthChange, getCurrentUser, getUserProfile } from '../services/authService.js';
 
 const AuthContext = createContext(null);
 
@@ -26,7 +26,6 @@ export function AuthProvider({ children }) {
       if (firebaseUser) {
         try {
           // Fetch additional profile data (role) from Firestore
-          const { getUserProfile } = await import('../services/authService.js');
           const profile = await getUserProfile(firebaseUser.uid);
           setUser({ ...firebaseUser, ...profile });
         } catch (error) {

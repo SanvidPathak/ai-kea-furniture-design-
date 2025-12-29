@@ -174,6 +174,7 @@ export function DesignPreview({ design }) {
         parts={design.parts}
         material={design.material}
         totalCost={design.totalCost}
+        pricingSnapshot={design.pricingSnapshot}
       />
 
       {/* Assembly Instructions */}

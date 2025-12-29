@@ -46,9 +46,13 @@ export function DesignDetailPage() {
         return;
       }
 
-      // Recalculate price with current rates
+      // Recalculate price with current rates or stored snapshot
       if (designData.parts && designData.material) {
-        const recalculatedCost = calculateTotalCost(designData.parts, designData.material);
+        const recalculatedCost = calculateTotalCost(
+          designData.parts,
+          designData.material,
+          designData.pricingSnapshot
+        );
         designData.totalCost = recalculatedCost;
       }
 
@@ -266,6 +270,7 @@ export function DesignDetailPage() {
             parts={design.parts}
             material={design.material}
             totalCost={design.totalCost}
+            pricingSnapshot={design.pricingSnapshot}
           />
 
           {/* Assembly Instructions */}

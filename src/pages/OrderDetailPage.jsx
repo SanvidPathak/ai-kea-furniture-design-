@@ -250,6 +250,7 @@ export function OrderDetailPage() {
             parts={order.designSnapshot.parts}
             material={order.designSnapshot.material}
             totalCost={order.designSnapshot.totalCost}
+            pricingSnapshot={order.designSnapshot.pricingSnapshot}
           />
 
           {/* Delivery Information */}

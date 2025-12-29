@@ -3,17 +3,17 @@ import { subscribeToAllOrders, updateOrderStatus } from '../../services/adminSer
 import { LoadingSpinner } from '../common/LoadingSpinner.jsx';
 import { toast } from 'react-hot-toast';
 
-export function FactoryBoard() {
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+export function FactoryBoard({ orders = [], loading = false }) {
+    // const [orders, setOrders] = useState([]);
+    // const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = subscribeToAllOrders((updatedOrders) => {
-            setOrders(updatedOrders);
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    }, []);
+    // useEffect(() => {
+    //     const unsubscribe = subscribeToAllOrders((updatedOrders) => {
+    //         setOrders(updatedOrders);
+    //         setLoading(false);
+    //     });
+    //     return () => unsubscribe();
+    // }, []);
 
     const handleStatusMove = async (order, nextStatus) => {
         try {
