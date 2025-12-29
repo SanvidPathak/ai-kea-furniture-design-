@@ -72,10 +72,10 @@ export async function saveOrder(userId, orderData) {
       ...orderData,
       userId,
       type: DOCUMENT_TYPE,
-      status: 'processing', // Default status
+      status: 'pending_payment', // Initial status awaiting payment
       statusHistory: [
         {
-          status: 'processing',
+          status: 'pending_payment',
           timestamp: new Date(),
         }
       ],
@@ -211,6 +211,42 @@ export async function updateOrder(orderId, userId, updates) {
 }
 
 /**
+ * Update order status (Convenience wrapper)
+ * @param {string} orderId - Order ID
+ * @param {string} status - New Status
+ * @returns {Promise<Object>} Updated order
+ */
+export async function updateOrderStatus(orderId, status) {
+  try {
+    const db = getFirestoreInstance();
+    const orderRef = doc(db, COLLECTION_NAME, orderId);
+
+    // Get current order history
+    const orderDoc = await getDoc(orderRef);
+    if (!orderDoc.exists()) throw new Error('Order not found');
+
+    const data = orderDoc.data();
+    const history = data.statusHistory || [];
+
+    // Add new status to history
+    history.push({
+      status,
+      timestamp: new Date()
+    });
+
+    await updateDoc(orderRef, {
+      status,
+      statusHistory: history,
+      updatedAt: serverTimestamp()
+    });
+
+    return { id: orderId, ...data, status, statusHistory: history };
+  } catch (error) {
+    throw new Error(`Failed to update order status: ${error.message}`);
+  }
+}
+
+/**
  * Delete an order
  * @param {string} orderId - Order document ID
  * @param {string} userId - User ID (for ownership verification)
@@ -243,6 +279,30 @@ export async function deleteOrder(orderId, userId) {
   } catch (error) {
     throw new Error(`Failed to delete order: ${error.message}`);
   }
+}
+
+/**
+ * Subscribe to a single Order for Real-Time Updates
+ * @param {string} orderId
+ * @param {Function} onUpdate
+ * @returns {Function} Unsubscribe
+ */
+export function subscribeToOrder(orderId, onUpdate) {
+  const db = getFirestoreInstance();
+  const orderRef = doc(db, COLLECTION_NAME, orderId);
+
+  return onSnapshot(orderRef, (docSnapshot) => {
+    if (docSnapshot.exists()) {
+      onUpdate({
+        id: docSnapshot.id,
+        ...convertTimestamps(docSnapshot.data())
+      });
+    } else {
+      onUpdate(null);
+    }
+  }, (error) => {
+    console.error('Subscription Error:', error);
+  });
 }
 
 /**
@@ -289,6 +349,7 @@ export function getOrderStatusDisplay(status) {
     shipped: { label: 'Shipped', color: 'text-indigo-600 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-900/30' },
     delivered: { label: 'Delivered', color: 'text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-900/30' },
     cancelled: { label: 'Cancelled', color: 'text-red-600 bg-red-50 dark:text-red-300 dark:bg-red-900/30' },
+    pending_payment: { label: 'Payment Pending', color: 'text-orange-600 bg-orange-50 dark:text-orange-300 dark:bg-orange-900/30' },
   };
 
   return statusMap[status] || { label: status, color: 'text-neutral-600 bg-neutral-50' };

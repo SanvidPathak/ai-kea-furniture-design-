@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getFunctions } from 'firebase/functions';
 
 // Check if running in browser (Vite) or Node.js environment
 const isBrowser = typeof window !== 'undefined';
@@ -27,5 +28,6 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+export const functions = getFunctions(app);
 
 export default app;

@@ -1,10 +1,12 @@
-
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenAI } = require("@google/genai");
+const Razorpay = require("razorpay");
 
 // Define Secret for API Key
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
+const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
+const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 
 // --- LOGIC FROM aiDesignParser.js ---
 
@@ -433,5 +435,50 @@ exports.generateFurnitureDesign = onCall({ secrets: [geminiApiKey] }, async (req
         }
         // Convert other errors to HttpsError
         throw new HttpsError('internal', `Failed to parse furniture request: ${error.message}`);
+    }
+});
+
+// --- PAYMENT GATEWAY ---
+
+exports.createRazorpayOrder = onCall({ secrets: [razorpayKeyId, razorpayKeySecret] }, async (request) => {
+    const { amount, currency = "INR", receipt } = request.data;
+    const key_id = razorpayKeyId.value();
+    const key_secret = razorpayKeySecret.value();
+
+    if (!key_id || !key_secret) {
+        throw new HttpsError('failed-precondition', 'Razorpay API keys are missing in configuration');
+    }
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+        throw new HttpsError('invalid-argument', 'Invalid amount provided');
+    }
+
+    try {
+        const instance = new Razorpay({
+            key_id: key_id,
+            key_secret: key_secret,
+        });
+
+        const options = {
+            amount: Math.round(amount * 100), // Convert to smallest currency unit (paise)
+            currency: currency,
+            receipt: receipt || `receipt_${Date.now()}`,
+        };
+
+        const order = await instance.orders.create(options);
+
+        if (!order) {
+            throw new HttpsError('internal', 'Failed to create Razorpay order');
+        }
+
+        return {
+            id: order.id,
+            currency: order.currency,
+            amount: order.amount,
+        };
+    } catch (error) {
+        console.error("Razorpay Error Details:", error);
+        // More detailed error checking if possible
+        throw new HttpsError('internal', error.message || 'Payment initiation failed');
     }
 });

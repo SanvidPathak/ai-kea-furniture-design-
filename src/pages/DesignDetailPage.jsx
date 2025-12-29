@@ -3,7 +3,8 @@ import { Link, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { getDesign, deleteDesign } from '../services/designService.js';
-import { saveOrder } from '../services/orderService.js';
+import { saveOrder, updateOrderStatus } from '../services/orderService.js';
+import { initiatePayment } from '../services/paymentService.js';
 import { signOut } from '../services/authService.js';
 import { calculateTotalCost } from '../services/designGenerator.js';
 import { exportDesignAsPDF, exportPartsAsCSV, exportAssemblyInstructionsAsPDF } from '../utils/exportUtils.js';
@@ -134,12 +135,42 @@ export function DesignDetailPage() {
         customerInfo,
       };
 
-      await saveOrder(user.uid, orderData);
-      showToast('Order placed successfully! Check My Orders for details.', 'success');
+      // 1. Create the order first (Status: pending_payment)
+      const savedOrder = await saveOrder(user.uid, orderData);
+
+      // 2. Close the modal forms
       setShowOrderForm(false);
+
+      // 3. Initiate Payment immediately
+      initiatePayment(
+        {
+          amount: design.totalCost,
+          receipt: `order_${savedOrder.id}`,
+          userEmail: customerInfo.email,
+          userContact: customerInfo.phone
+        },
+        async (response) => {
+          // Payment Success
+          try {
+            await updateOrderStatus(savedOrder.id, 'confirmed');
+            showToast('Order confirmed! Redirecting...', 'success');
+            navigate(`/orders/${savedOrder.id}`);
+          } catch (err) {
+            console.error("Status update failed:", err);
+            // Even if status update fails, redirect them so they can see/retry
+            navigate(`/orders/${savedOrder.id}`);
+          }
+        },
+        (error) => {
+          // Payment Failed / Cancelled
+          showToast('Payment ignored. You can pay later from "My Orders".', 'info');
+          navigate(`/orders/${savedOrder.id}`);
+        }
+      );
+
     } catch (error) {
       console.error('Order creation error:', error);
-      throw error;
+      showToast('Failed to place order', 'error');
     }
   };
 

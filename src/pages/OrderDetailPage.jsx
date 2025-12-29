@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { getOrder, deleteOrder, getOrderStatusDisplay } from '../services/orderService.js';
+import { getOrder, deleteOrder, getOrderStatusDisplay, updateOrderStatus, subscribeToOrder } from '../services/orderService.js';
 import { signOut } from '../services/authService.js';
+import { initiatePayment } from '../services/paymentService.js';
 import { exportDesignAsPDF, exportPartsAsCSV, exportAssemblyInstructionsAsPDF } from '../utils/exportUtils.js';
 import { OrderStatusTimeline } from '../components/order/OrderStatusTimeline.jsx';
 import { DesignPartsTable } from '../components/design/DesignPartsTable.jsx';
@@ -21,36 +22,36 @@ export function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
+    let unsubscribe = () => { };
+
     if (isAuthenticated && user) {
-      loadOrder();
+      setLoading(true);
+      unsubscribe = subscribeToOrder(id, (orderData) => {
+        setLoading(false);
+        if (!orderData) {
+          setErrorMessage('Order not found or has been deleted.');
+          setOrder(null);
+          return;
+        }
+
+        // Verify ownership
+        if (orderData.userId !== user.uid) {
+          setErrorMessage('You do not have permission to view this order.');
+          setOrder(null);
+          return;
+        }
+
+        setOrder(orderData);
+      });
     } else if (!authLoading) {
       setLoading(false);
     }
+
+    return () => unsubscribe();
   }, [id, isAuthenticated, user, authLoading]);
-
-  const loadOrder = async () => {
-    setLoading(true);
-    setErrorMessage('');
-
-    try {
-      const orderData = await getOrder(id);
-
-      // Verify ownership
-      if (orderData.userId !== user.uid) {
-        setErrorMessage('You do not have permission to view this order.');
-        return;
-      }
-
-      setOrder(orderData);
-    } catch (error) {
-      console.error('Load order error:', error);
-      setErrorMessage('Failed to load order. It may have been deleted.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCancelOrder = async () => {
     if (!window.confirm('Are you sure you want to cancel this order? This cannot be undone.')) {
@@ -77,6 +78,49 @@ export function OrderDetailPage() {
     } catch (error) {
       console.error('Sign out error:', error);
     }
+  };
+
+  const handlePayment = () => {
+    if (!order) return;
+    setIsPaying(true);
+
+    // Construct Order Details for Payment
+    const paymentDetails = {
+      amount: order.designSnapshot.totalCost,
+      receipt: `order_${order.id}`,
+      userEmail: (order.customerInfo || order).email,
+      userContact: (order.customerInfo || order).phone
+    };
+
+    initiatePayment(
+      paymentDetails,
+      // Success Callback
+      async (response) => {
+        try {
+          // In a real app, you would verify signature on backend here
+          console.log("Payment Success:", response);
+
+          showToast('Payment successful! Updating order...', 'success');
+
+          // Update Order Status in Firestore to 'confirmed' (or 'processing' if you prefer)
+          await updateOrderStatus(order.id, 'confirmed');
+
+          // Refresh order to show new status
+          // loadOrder(); // Subscription handles this automatically now
+        } catch (error) {
+          console.error("Order Status Update Error:", error);
+          showToast('Payment successful but failed to update order status. Please contact support.', 'error');
+        } finally {
+          setIsPaying(false);
+        }
+      },
+      // Failure Callback
+      (error) => {
+        console.error("Payment Failed:", error);
+        showToast(error.message || 'Payment failed or cancelled', 'error');
+        setIsPaying(false);
+      }
+    );
   };
 
   const handleExportPDF = () => {
@@ -323,6 +367,18 @@ export function OrderDetailPage() {
                 </Button>
               </Link>
             )}
+
+            {/* Pay Now Button (Only for Pending Payment) */}
+            {order.status === 'pending_payment' && (
+              <Button
+                onClick={handlePayment}
+                loading={isPaying}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                💳 Pay Now
+              </Button>
+            )}
+
             {order.status === 'processing' && (
               <Button
                 onClick={handleCancelOrder}

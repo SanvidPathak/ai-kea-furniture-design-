@@ -91,7 +91,7 @@ debug_bookshelf_logic.js
 reproduce_conflict_bug.js
 test-functions.js
 
-PROJECT_TIMELINE.csv
+#PROJECT_TIMELINE.csv
 
 # Claude files
 .claude/
