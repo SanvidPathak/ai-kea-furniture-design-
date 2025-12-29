@@ -49,15 +49,15 @@ export function PriceConfigPanel() {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">⚙️ Website Configuration</h2>
-                    <p className="text-sm text-neutral-500 mt-1">Manage global material rates and engineering constants.</p>
+                    <h2 className="text-lg sm:text-xl font-semibold text-neutral-800 dark:text-neutral-200">⚙️ Website Configuration</h2>
+                    <p className="text-xs sm:text-sm text-neutral-500 mt-1">Manage global material rates and engineering constants.</p>
                 </div>
                 <button
                     onClick={handleUpdate}
                     disabled={saving}
-                    className="px-6 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                    className="w-full sm:w-auto px-6 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm sm:text-base"
                 >
                     {saving ? 'Saving...' : 'Save Changes'}
                 </button>

@@ -77,7 +77,7 @@ export function AnalyticsDashboard({ orders = [] }) {
                             <span className="text-2xl">{card.icon}</span>
                             <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 capitalize">{card.label}</span>
                         </div>
-                        <div className={`text-2xl md:text-3xl font-bold ${card.color}`}>
+                        <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${card.color}`}>
                             {card.value}
                         </div>
                     </motion.div>

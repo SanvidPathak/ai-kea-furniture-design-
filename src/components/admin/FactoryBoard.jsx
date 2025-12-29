@@ -118,7 +118,7 @@ function StatusColumn({ title, icon, color, orders, onAction, actionLabel }) {
 
                             <button
                                 onClick={() => onAction(order)}
-                                className="w-full py-1.5 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-semibold rounded hover:opacity-90 transition-opacity"
+                                className="w-full py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:opacity-90 transition-opacity"
                             >
                                 {actionLabel}
                             </button>

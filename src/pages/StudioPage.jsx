@@ -37,10 +37,10 @@ export function StudioPage() {
                 >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div>
-                            <h1 className="text-3xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
-                                <span className="text-4xl">🛠️</span> Studio Command Center
+                            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white flex items-center gap-2 sm:gap-3">
+                                <span className="text-3xl sm:text-4xl">🛠️</span> Studio Command Center
                             </h1>
-                            <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+                            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
                                 Welcome back, <strong>{user?.name}</strong>. Managing global operations.
                             </p>
                         </div>
@@ -55,7 +55,7 @@ export function StudioPage() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all relative ${activeTab === tab.id
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm font-medium transition-all relative ${activeTab === tab.id
                                     ? 'text-neutral-900 dark:text-white'
                                     : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
                                     }`}
@@ -83,8 +83,8 @@ export function StudioPage() {
                         >
                             {activeTab === 'simulation' && (
                                 <section>
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">🏭 Order Management (Simulation)</h2>
+                                    <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                        <h2 className="text-lg sm:text-xl font-semibold text-neutral-800 dark:text-neutral-200">🏭 Order Management</h2>
                                     </div>
                                     <FactoryBoard orders={orders} loading={loading} />
                                 </section>
