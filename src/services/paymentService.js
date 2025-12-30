@@ -28,7 +28,7 @@ const loadRazorpayScript = () => {
 export const initiatePayment = async (orderDetails, onSuccess, onFailure) => {
     const { amount, receipt, userEmail, userContact } = orderDetails;
 
-    // 1. Load Script
+    // 1. Load Script (Ideally should be pre-loaded)
     const isScriptLoaded = await loadRazorpayScript();
     if (!isScriptLoaded) {
         onFailure({ message: "Razorpay SDK failed to load. Are you online?" });
@@ -36,24 +36,20 @@ export const initiatePayment = async (orderDetails, onSuccess, onFailure) => {
     }
 
     try {
-        // 2. Create Order on Server (Cloud Function)
+        // 2. Create Order on Server
         const createRazorpayOrder = httpsCallable(functions, 'createRazorpayOrder');
         const response = await createRazorpayOrder({ amount, receipt });
         const { id: order_id, currency, amount: order_amount } = response.data;
 
         // 3. Open Razorpay Checkout
         const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Use Environment Variable
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
             amount: order_amount.toString(),
             currency: currency,
             name: "AI-KEA Furniture",
             description: "Custom Furniture Order",
-            // image: "/logo.png", // specific logo if you have one
             order_id: order_id,
-            handler: function (response) {
-                // Payment Success: response contains razorpay_payment_id, razorpay_order_id, razorpay_signature
-                onSuccess(response);
-            },
+            handler: onSuccess, // Simplified handler passing
             prefill: {
                 email: userEmail || "",
                 contact: userContact || "",
@@ -62,16 +58,26 @@ export const initiatePayment = async (orderDetails, onSuccess, onFailure) => {
                 address: "AI-KEA Corporate Office",
             },
             theme: {
-                color: "#1F2937", // Matches your dark theme (gray-800)
+                color: "#1F2937",
+            },
+            retry: {
+                enabled: true, // Specific fix for flaky connections
             },
             modal: {
-                ondismiss: function () {
+                ondismiss: () => {
                     onFailure({ message: "Payment cancelled by user" });
                 }
             }
         };
 
         const paymentObject = new window.Razorpay(options);
+
+        // ios-fix: Handle potential failure in opening
+        paymentObject.on('payment.failed', function (response) {
+            console.error("Payment Failed Event:", response.error);
+            onFailure(response.error);
+        });
+
         paymentObject.open();
 
     } catch (error) {
