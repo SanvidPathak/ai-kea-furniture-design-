@@ -368,8 +368,8 @@ export function OrderDetailPage() {
               </Link>
             )}
 
-            {/* Pay Now Button (Only for Pending Payment) */}
-            {order.status === 'pending_payment' && (
+            {/* Pay Now Button (Only for Processing i.e. Unpaid) */}
+            {order.status === 'processing' && (
               <Button
                 onClick={handlePayment}
                 loading={isPaying}

@@ -72,10 +72,10 @@ export async function saveOrder(userId, orderData) {
       ...orderData,
       userId,
       type: DOCUMENT_TYPE,
-      status: 'pending_payment', // Initial status awaiting payment
+      status: 'processing', // Default status (was pending_payment)
       statusHistory: [
         {
-          status: 'pending_payment',
+          status: 'processing',
           timestamp: new Date(),
         }
       ],
@@ -349,7 +349,6 @@ export function getOrderStatusDisplay(status) {
     shipped: { label: 'Shipped', color: 'text-indigo-600 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-900/30' },
     delivered: { label: 'Delivered', color: 'text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-900/30' },
     cancelled: { label: 'Cancelled', color: 'text-red-600 bg-red-50 dark:text-red-300 dark:bg-red-900/30' },
-    pending_payment: { label: 'Payment Pending', color: 'text-orange-600 bg-orange-50 dark:text-orange-300 dark:bg-orange-900/30' },
   };
 
   return statusMap[status] || { label: status, color: 'text-neutral-600 bg-neutral-50' };
