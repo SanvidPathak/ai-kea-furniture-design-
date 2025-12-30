@@ -141,32 +141,12 @@ export function DesignDetailPage() {
       // 2. Close the modal forms
       setShowOrderForm(false);
 
-      // 3. Initiate Payment immediately
-      initiatePayment(
-        {
-          amount: design.totalCost,
-          receipt: `order_${savedOrder.id}`,
-          userEmail: customerInfo.email,
-          userContact: customerInfo.phone
-        },
-        async (response) => {
-          // Payment Success
-          try {
-            await updateOrderStatus(savedOrder.id, 'confirmed');
-            showToast('Order confirmed! Redirecting...', 'success');
-            navigate(`/orders/${savedOrder.id}`);
-          } catch (err) {
-            console.error("Status update failed:", err);
-            // Even if status update fails, redirect them so they can see/retry
-            navigate(`/orders/${savedOrder.id}`);
-          }
-        },
-        (error) => {
-          // Payment Failed / Cancelled
-          showToast('Payment ignored. You can pay later from "My Orders".', 'info');
-          navigate(`/orders/${savedOrder.id}`);
-        }
-      );
+      // 3. Initiate Payment immediately? 
+      // NO - On iOS/Safari, the async 'saveOrder' above breaks the user gesture context.
+      // We must redirect to the Order Page and let the user click "Pay Now" manually.
+
+      showToast('Order placed! Please complete payment.', 'success');
+      navigate(`/orders/${savedOrder.id}`);
 
     } catch (error) {
       console.error('Order creation error:', error);
