@@ -150,7 +150,7 @@ export function DesignDetailPage() {
 
     } catch (error) {
       console.error('Order creation error:', error);
-      showToast('Failed to place order', 'error');
+      showToast(`Failed to place order: ${error.message}`, 'error');
     }
   };
 
