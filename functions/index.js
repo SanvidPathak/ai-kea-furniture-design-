@@ -440,7 +440,7 @@ exports.generateFurnitureDesign = onCall({ secrets: [geminiApiKey] }, async (req
 
 // --- PAYMENT GATEWAY ---
 
-exports.createRazorpayOrder = onCall({ region: "asia-south1", secrets: [razorpayKeyId, razorpayKeySecret] }, async (request) => {
+exports.createRazorpayOrder = onCall({ secrets: [razorpayKeyId, razorpayKeySecret] }, async (request) => {
     const { amount, currency = "INR", receipt } = request.data;
     const key_id = razorpayKeyId.value();
     const key_secret = razorpayKeySecret.value();
