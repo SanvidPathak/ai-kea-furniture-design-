@@ -46,7 +46,7 @@ export async function signUp(email, password, name) {
 
     return userCredential;
   } catch (error) {
-    throw new Error(`Sign up failed: ${error.message}`);
+    throw error;
   }
 }
 
@@ -69,7 +69,7 @@ export async function signIn(email, password) {
 
     return userCredential;
   } catch (error) {
-    throw new Error(`Sign in failed: ${error.message}`);
+    throw error;
   }
 }
 
