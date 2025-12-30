@@ -91,9 +91,11 @@ export function AnalyticsDashboard({ orders = [] }) {
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     {['processing', 'confirmed', 'manufacturing', 'shipped', 'delivered', 'cancelled'].map((status) => (
-                        <div key={status} className="bg-white dark:bg-neutral-800 p-4 rounded-xl border border-neutral-100 dark:border-neutral-700 shadow-sm">
-                            <div className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-1">{status}</div>
-                            <div className="text-xl font-bold text-neutral-700 dark:text-neutral-300">
+                        <div key={status} className="bg-white dark:bg-neutral-800 p-3 rounded-xl border border-neutral-100 dark:border-neutral-700 shadow-sm overflow-hidden">
+                            <div className="text-[10px] sm:text-xs font-medium text-neutral-400 uppercase tracking-normal mb-1 truncate" title={status}>
+                                {status}
+                            </div>
+                            <div className="text-lg sm:text-xl font-bold text-neutral-700 dark:text-neutral-300">
                                 {stats.statusCounts[status] || 0}
                             </div>
                         </div>
