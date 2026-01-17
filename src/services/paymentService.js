@@ -54,21 +54,33 @@ export const initiatePayment = async (orderDetails, onSuccess, onFailure) => {
                 email: userEmail || "",
                 contact: userContact || "",
             },
-            notes: {
-                address: "AI-KEA Corporate Office",
-            },
             theme: {
                 color: "#1F2937",
             },
-            retry: {
-                enabled: true, // Specific fix for flaky connections
+            notes: {
+                address: "AI-KEA Corporate Office",
             },
-            modal: {
+        };
+
+        // --- iOS OPTIMIZATION: Use Redirect Flow ---
+        // Safari on iOS blocks frames/popups. We force a redirect by adding callback_url.
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        if (isIOS) {
+            // Redirect back to this same order page with callback params
+            options.callback_url = `${window.location.origin}/orders/${order_id}`;
+            // When using callback_url, Razorpay auto-redirects. 
+            // The 'handler' function will NOT be called in this case.
+        } else {
+            // Standard Popup Handler for Desktop/Android
+            options.handler = onSuccess;
+            options.retry = { enabled: true };
+            options.modal = {
                 ondismiss: () => {
                     onFailure({ message: "Payment cancelled by user" });
                 }
-            }
-        };
+            };
+        }
 
         const paymentObject = new window.Razorpay(options);
 

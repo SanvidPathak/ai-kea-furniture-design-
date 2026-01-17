@@ -53,6 +53,31 @@ export function OrderDetailPage() {
     return () => unsubscribe();
   }, [id, isAuthenticated, user, authLoading]);
 
+  // --- iOS Payment Callback Handling ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get('razorpay_payment_id');
+    const paymentStatus = params.get('razorpay_payment_link_status'); // Sometimes used
+
+    if (paymentId && order && order.status === 'processing') {
+      // Payment Redirect Success
+      const completeRedirectPayment = async () => {
+        try {
+          // Clear URL params to prevent re-triggering
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          showToast('Payment verified! Updating order...', 'success');
+          await updateOrderStatus(order.id, 'confirmed');
+          // No need to reload, subscription will update UI
+        } catch (error) {
+          console.error("Redirect Payment Update Error:", error);
+          showToast('Payment successful but failed to update order. Contact support.', 'error');
+        }
+      };
+      completeRedirectPayment();
+    }
+  }, [order]); // Dependent on order being loaded to verify status
+
   const handleCancelOrder = async () => {
     if (!window.confirm('Are you sure you want to cancel this order? This cannot be undone.')) {
       return;
