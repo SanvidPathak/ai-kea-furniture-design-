@@ -1070,6 +1070,7 @@ export async function generateDesign(config) {
   // 1. Setup Dimensions & Load (Mutable)
   let finalDimensions = dimensions ? { ...dimensions } : { ...DEFAULT_DIMENSIONS[furnitureType] };
   let projectedLoad = config.projectedLoad;
+  const localWarnings = []; // Store early validation warnings here
 
   // --- BED LOGIC PRE-PROCESS ---
   // If bedSize is provided, we must resolve dimensions AND load specs BEFORE generating parts/specs.
@@ -1089,10 +1090,26 @@ export async function generateDesign(config) {
       // Height remains as input or default
     } else {
       // Custom Dimensions (Mattress = Input)
-      mattressL = finalDimensions.length;
       // If user didn't specify width/height, defaults might be wrongly applied by dimensions arg?
       // Assuming 'dimensions' has valid defaults from Parser if missing.
     }
+
+    // 3. Enforce Minimum Size Constraint (Single/Twin: 90x190 cm)
+    const MIN_BED_WIDTH = 90;  // X-axis
+    const MIN_BED_LENGTH = 190; // Z-axis
+
+    if (finalDimensions.length < MIN_BED_WIDTH || finalDimensions.width < MIN_BED_LENGTH) {
+      console.warn(`[DesignGenerator] Bed dimensions (${finalDimensions.length}x${finalDimensions.width}) smaller than standard. Clamping to minimum.`);
+
+      localWarnings.push(`Bed size clamped to minimum standard (${MIN_BED_WIDTH}x${MIN_BED_LENGTH}cm) for structural viability.`);
+
+      if (finalDimensions.length < MIN_BED_WIDTH) finalDimensions.length = MIN_BED_WIDTH;
+      if (finalDimensions.width < MIN_BED_LENGTH) finalDimensions.width = MIN_BED_LENGTH;
+    }
+
+    // Update local helpers after clamping
+    mattressL = finalDimensions.length;
+    mattressW = finalDimensions.width;
 
     // 2. Resolve Load Capacity
     if (mattressL >= 135) {
@@ -1232,7 +1249,7 @@ export async function generateDesign(config) {
     instructions,
     assemblyTime,
     structural: structuralReport, // Attach engineering data
-    warnings: [...(engineeringSpecs.warnings || [])] // Merge AI warnings and Engineering warnings
+    warnings: [...(engineeringSpecs.warnings || []), ...localWarnings] // Merge AI warnings, Engineering warnings, and Local warnings
   };
 
   // --- 3D GENERATION PHASE ---
