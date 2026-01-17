@@ -476,11 +476,6 @@ exports.createRazorpayOrder = onCall({ secrets: [razorpayKeyId, razorpayKeySecre
             currency: order.currency,
             amount: order.amount,
         };
-        return {
-            id: order.id,
-            currency: order.currency,
-            amount: order.amount,
-        };
     } catch (error) {
         console.error("Razorpay Error Details:", error);
         // More detailed error checking if possible
