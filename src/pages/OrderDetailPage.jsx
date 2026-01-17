@@ -57,21 +57,19 @@ export function OrderDetailPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paymentId = params.get('razorpay_payment_id');
-    const paymentStatus = params.get('razorpay_payment_link_status'); // Sometimes used
+    const paymentSuccess = params.get('payment_success');
 
-    if (paymentId && order && order.status === 'processing') {
+    if ((paymentId || paymentSuccess) && order && order.status === 'processing') {
       // Payment Redirect Success
       const completeRedirectPayment = async () => {
         try {
           // Clear URL params to prevent re-triggering
           window.history.replaceState({}, document.title, window.location.pathname);
 
-          showToast('Payment verified! Updating order...', 'success');
-          await updateOrderStatus(order.id, 'confirmed');
-          // No need to reload, subscription will update UI
+          showToast('Payment verified! Order confirmed.', 'success');
+          // Subscription will update the UI automatically
         } catch (error) {
-          console.error("Redirect Payment Update Error:", error);
-          showToast('Payment successful but failed to update order. Contact support.', 'error');
+          console.error("Redirect UI Feedback Error:", error);
         }
       };
       completeRedirectPayment();
