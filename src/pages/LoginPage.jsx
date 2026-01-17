@@ -1,12 +1,13 @@
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { LoginForm } from '../components/auth/LoginForm.jsx';
 import { LoadingSpinner } from '../components/common/LoadingSpinner.jsx';
 
 export function LoginPage() {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
-  // Redirect to home if already authenticated
+  // Redirect to home (or previous page) if already authenticated
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -16,7 +17,9 @@ export function LoginPage() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    // Redirect to the page they tried to visit, or home
+    const from = location.state?.from?.pathname || "/";
+    return <Navigate to={from} replace />;
   }
 
   return (

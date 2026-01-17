@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate, Navigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { getOrder, deleteOrder, getOrderStatusDisplay, updateOrderStatus, subscribeToOrder } from '../services/orderService.js';
@@ -196,8 +196,9 @@ export function OrderDetailPage() {
   };
 
   // Redirect to login if not authenticated
+  const location = useLocation();
   if (!authLoading && !isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return (
