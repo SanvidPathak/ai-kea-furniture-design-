@@ -1,4 +1,4 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenAI } = require("@google/genai");
 const Razorpay = require("razorpay");
@@ -476,9 +476,95 @@ exports.createRazorpayOrder = onCall({ secrets: [razorpayKeyId, razorpayKeySecre
             currency: order.currency,
             amount: order.amount,
         };
+        return {
+            id: order.id,
+            currency: order.currency,
+            amount: order.amount,
+        };
     } catch (error) {
         console.error("Razorpay Error Details:", error);
         // More detailed error checking if possible
         throw new HttpsError('internal', error.message || 'Payment initiation failed');
     }
+});
+
+exports.handlePaymentCallback = onRequest({ secrets: [razorpayKeySecret] }, async (req, res) => {
+    const crypto = require('crypto');
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    const secret = razorpayKeySecret.value();
+
+    // 1. Verify Signature
+    const generated_signature = crypto
+        .createHmac('sha256', secret)
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest('hex');
+
+    if (generated_signature === razorpay_signature) {
+        // 2. Update Firestore
+        // We need to find the order with this razorpay_order_id. 
+        // However, we don't strictly link them in DB yet. 
+        // BUT, we passed 'receipt' as `order_${firestoreId}`.
+        // Wait, req.body doesn't have receipt. 
+
+        // Alternative: We can pass the Firestore Order ID in the 'notes' or 'callback_url' query params?
+        // Razorpay appends POST data to callback_url? No, it POSTs body.
+
+        // Better: We can store the razorpay_order_id in the order document during creation!
+        // Current 'createRazorpayOrder' returns it to client, but doesn't save it to Firestore.
+
+        // QUICK FIX: 
+        // For the callback to know which Order to update, we need the Firestore Order ID.
+        // We can pass it in the query param of the callback_url we provide to Razorpay!
+        // e.g., callback_url: `.../handlePaymentCallback?orderId=${orderId}`
+
+        const orderId = req.query.orderId;
+
+        if (orderId) {
+            const admin = require('firebase-admin');
+            if (!admin.apps.length) {
+                admin.initializeApp();
+            }
+            const db = admin.firestore();
+
+            try {
+                await db.collection('mydb').doc(orderId).update({
+                    status: 'confirmed',
+                    statusHistory: admin.firestore.FieldValue.arrayUnion({
+                        status: 'confirmed',
+                        timestamp: new Date()
+                    }),
+                    paymentDetails: {
+                        razorpay_payment_id,
+                        razorpay_order_id,
+                        razorpay_signature,
+                        verified: true
+                    },
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 3. Redirect to Frontend Success
+                // Use a hardcoded allowed origin or specific domain
+                // For now, redirect to the firebase hosting URL
+                // We need to retrieve the origin dynamically or assume standard
+                // Let's assume the request host is the API host, preventing generic redirects.
+
+                // Ideally, redirect to: https://<project-id>.web.app/orders/<orderId>?payment_success=true
+                // We can get project ID from `process.env.GCLOUD_PROJECT`
+                const projectId = process.env.GCLOUD_PROJECT;
+                const appUrl = `https://${projectId}.web.app/orders/${orderId}?payment_success=true`;
+
+                res.redirect(303, appUrl);
+                return;
+
+            } catch (err) {
+                console.error("Firestore Update Error:", err);
+                res.status(500).send("Internal Server Error updating order");
+                return;
+            }
+        }
+    }
+
+    // Signature Mismatch or Missing params
+    console.error("Signature verification failed");
+    res.status(400).send("Invalid Signature");
 });

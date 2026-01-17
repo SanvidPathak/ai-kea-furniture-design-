@@ -67,10 +67,14 @@ export const initiatePayment = async (orderDetails, onSuccess, onFailure) => {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
         if (isIOS) {
-            // Redirect back to this same order page with callback params
-            options.callback_url = `${window.location.origin}/orders/${order_id}`;
-            // When using callback_url, Razorpay auto-redirects. 
-            // The 'handler' function will NOT be called in this case.
+            // Redirect to Cloud Function which handles the POST callback, verification, and DB update.
+            // Then it redirects back to the app with ?payment_success=true
+            const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+            const firestoreOrderId = receipt.replace('order_', ''); // Extract real ID
+
+            // Construct Cloud Function URL (assuming default region us-central1)
+            // If we change region, we must update this.
+            options.callback_url = `https://us-central1-${projectId}.cloudfunctions.net/handlePaymentCallback?orderId=${firestoreOrderId}`;
         } else {
             // Standard Popup Handler for Desktop/Android
             options.handler = onSuccess;
